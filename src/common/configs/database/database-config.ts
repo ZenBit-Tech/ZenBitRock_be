@@ -5,7 +5,7 @@ import * as process from 'process';
 export const databaseConfiguration = (
   isMigrationRun = true,
 ): DataSourceOptions => {
-  const migrationFolder = 'database/migrations';
+  const migrationFolder = 'migrations';
   const ext = extname(__filename);
 
   return {

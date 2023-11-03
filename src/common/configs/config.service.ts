@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { validateSync, ValidationError } from 'class-validator';
-
 import { ConfigDto } from './dto/config.dto';
 
 const ROOT_PATH = process.cwd();
@@ -12,6 +11,7 @@ const ENV_FILE = path.resolve(ROOT_PATH, '.env');
 @Injectable()
 export class ConfigService {
   private readonly logger = new Logger(ConfigService.name);
+
   private readonly configuration: ConfigDto;
 
   constructor() {
@@ -56,10 +56,9 @@ export class ConfigService {
   ): string {
     return validationErrors
       .map(
-        (validationError) =>
-          `${Object.values(validationError.constraints)
-            .map((constraint) => `  * ${constraint}.`)
-            .join('\n')}`,
+        (validationError) => `${Object.values(validationError.constraints)
+          .map((constraint) => `* ${constraint}.`)
+          .join('\n')}`,
       )
       .join('.\n');
   }
