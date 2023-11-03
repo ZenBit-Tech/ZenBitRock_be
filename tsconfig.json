@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "lib": ["ES2020", "DOM"],
+    "module": "commonjs",
+    "outDir": "./dist",
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "target": "ES2015"
+  },
+  "include": ["src/database/migrations/*", "src/**/*"],
+  "exclude": ["node_modules"]
+}
