@@ -20,6 +20,6 @@
     "sourceMap": true,
     "target": "ES2015"
   },
-  "include": ["src/database/migrations/*", "src/**/*"],
+  "include": ["src/migrations/*", "src/**/*"],
   "exclude": ["node_modules"]
 }
