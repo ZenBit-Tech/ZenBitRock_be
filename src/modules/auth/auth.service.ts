@@ -32,9 +32,9 @@ export class AuthService {
       }
 
       await this.authRepository.createQueryBuilder('auth').insert().values(signUpDto).execute();
-  } catch (error) {
-    throw error;
-  }
+    } catch (error) {
+      throw error;
+    }
   }
 
   public async getAllRegistration(): Promise<AuthDto[]> {
