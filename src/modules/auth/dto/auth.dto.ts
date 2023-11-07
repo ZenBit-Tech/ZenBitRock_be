@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class AuthDto {
   @IsNotEmpty()
@@ -15,7 +9,7 @@ export class AuthDto {
   @MaxLength(20, {
     message: 'The name should not be more than twenty characters',
   })
-    name: string;
+  name: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -25,7 +19,7 @@ export class AuthDto {
   @MaxLength(20, {
     message: 'The email should not be more than twenty characters',
   })
-    email: string;
+  email: string;
 
   @IsNotEmpty()
   @IsString()
@@ -35,5 +29,5 @@ export class AuthDto {
   @MaxLength(20, {
     message: 'The password should not be more than twenty characters',
   })
-    password: string;
+  password: string;
 }

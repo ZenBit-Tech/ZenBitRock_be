@@ -1,8 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
+
+import { Injectable, Logger } from '@nestjs/common';
+
 import { validateSync, ValidationError } from 'class-validator';
+import dotenv from 'dotenv';
+
 import { ConfigDto } from './dto/config.dto';
 
 const ROOT_PATH = process.cwd();
@@ -28,21 +31,14 @@ export class ConfigService {
     });
 
     if (validationResult && validationResult.length > 0) {
-      this.logger.error(
-        'Configurations invalid',
-        `Validation errors:\n${ConfigService.extractValidationErrorMessages(
-          validationResult,
-        )}`,
-      );
-      throw new Error(
-        `Configurations invalid \n${validationResult.toString()}`,
-      );
+      this.logger.error('Configurations invalid', `Validation errors:\n${ConfigService.extractValidationErrorMessages(validationResult)}`);
+      throw new Error(`Configurations invalid \n${validationResult.toString()}`);
     }
 
     this.configuration = configuration;
   }
 
-  public static getDotenvConfiguration(): Record<string, any> {
+  public static getDotenvConfiguration(): Record<string, string | number> {
     let configuration = {};
     if (fs.existsSync(ENV_FILE)) {
       configuration = dotenv.parse(fs.readFileSync(ENV_FILE));
@@ -51,14 +47,13 @@ export class ConfigService {
     return configuration;
   }
 
-  public static extractValidationErrorMessages(
-    validationErrors: ValidationError[],
-  ): string {
+  public static extractValidationErrorMessages(validationErrors: ValidationError[]): string {
     return validationErrors
       .map(
-        (validationError) => `${Object.values(validationError.constraints)
-          .map((constraint) => `* ${constraint}.`)
-          .join('\n')}`,
+        (validationError) =>
+          `${Object.values(validationError.constraints)
+            .map((constraint) => `* ${constraint}.`)
+            .join('\n')}`,
       )
       .join('.\n');
   }
