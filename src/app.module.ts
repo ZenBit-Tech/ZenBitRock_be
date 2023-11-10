@@ -6,9 +6,10 @@ import { AppService } from './app.service';
 import { ConfigModule } from './common/configs/config.module';
 import { typeOrmAsyncConfig } from './common/configs/database/typeorm-config';
 import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
-  imports: [TypeOrmModule.forRootAsync(typeOrmAsyncConfig), ConfigModule, AuthModule],
+  imports: [TypeOrmModule.forRootAsync(typeOrmAsyncConfig), ConfigModule, AuthModule, UserModule],
   controllers: [AppController],
   providers: [AppService],
 })
