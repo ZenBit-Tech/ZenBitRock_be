@@ -1,5 +1,6 @@
 import { Controller, Post, Body, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+
 import { User } from 'src/common/entities/user.entity';
 
 import { CreateUserDto } from './dto/create-user.dto';
