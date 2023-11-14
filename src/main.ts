@@ -18,7 +18,7 @@ async function bootstrap(): Promise<void> {
         forbidNonWhitelisted: true,
       }),
     );
-    const config = new DocumentBuilder().setTitle('Agentwise').build();
+    const config = new DocumentBuilder().setTitle('ZenbitRock').build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
 
