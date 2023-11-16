@@ -1,9 +1,13 @@
 ## Describe your changes
+
 - I did an awesome feature.
+
 ## Issue ticket code (and/or) and link
+
 - [Link to JIRA ticket](#https://ticket-url)
 
 ### **General**
+
 - [ ] Assigned myself to the PR
 - [ ] Assigned the appropriate labels to the PR
 - [ ] Assigned the appropriate reviewers to the PR
@@ -24,16 +28,8 @@
 - [ ] covered by tests
 - [ ] Check your commit messages meet the [conventional commit format](https://www.conventionalcommits.org/en/v1.0.0/).
 
-
-### Frontend
-- [ ] Components and business logic are separated
-- [ ] Colors, Font Size, and Font Name is on the theme or in the constants
-- [ ] No text in the components, use i18n approach
-- [ ] No inline styles
-- [ ] Imports are absolute
-- [ ] Attach a screenshot if PR has visual changes.
-
 ### Backend
+
 - [ ] Swagger documentation updated
 - [ ] Database requests are optimized and not redundant
 - [ ] Unit tests written
