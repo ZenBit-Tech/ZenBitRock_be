@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Inject, Injectable, UnauthorizedException, forwardRef } from '@nestjs/common';
 import { ConfigService } from 'src/common/configs/config.service';
 import { UserService } from '../user/user.service';
-import { generateCode } from './lib';
+import { CODE_LENGTH, generateCode } from './lib';
 
 @Injectable()
 export class EmailService {
@@ -20,7 +20,7 @@ export class EmailService {
     console.log(user);
 
     if (!user) throw new UnauthorizedException(`User doesn't exist`);
-    const code = generateCode(6);
+    const code = generateCode(CODE_LENGTH);
 
     await this.userService.updateById(user.id, {
       isVerified: false,
