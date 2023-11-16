@@ -2,10 +2,10 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "src/*": ["src/*"], 
+      "src/*": ["src/*"],
       "common/*": ["src/common/*"],
       "modules/*": ["src/modules/*"],
-      "migrations/*": ["src/migrations/*"],
+      "migrations/*": ["src/migrations/*"]
     },
     "declaration": true,
     "emitDecoratorMetadata": true,
