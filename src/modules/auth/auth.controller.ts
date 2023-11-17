@@ -1,5 +1,19 @@
-import { Controller, Get, Post, UseGuards, Request, Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  Request,
+  Body,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
 
@@ -27,7 +41,11 @@ export class AuthController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'Successfully retrieved user profile', type: CreateUserDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved user profile',
+    type: CreateUserDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<User> {
@@ -36,10 +54,25 @@ export class AuthController {
 
   @Post('confirm-email')
   @ApiOperation({ summary: 'Confirm email address' })
-  @ApiResponse({ status: 200, description: 'Email address successfully confirmed' })
+  @ApiResponse({
+    status: 200,
+    description: 'Email address successfully confirmed',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto): Promise<UpdateResult> {
-    const { code, email } = confirmEmailDto;
-    return this.authService.confirmEmail(email, code);
+  async confirmEmail(
+    @Body() confirmEmailDto: ConfirmEmailDto,
+  ): Promise<UpdateResult> {
+    try {
+      const { code, email } = confirmEmailDto;
+      return this.authService.confirmEmail(email, code);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Unable to confirm email!',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
