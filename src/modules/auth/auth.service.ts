@@ -35,7 +35,7 @@ export class AuthService {
     }
   }
 
-  async login(user: User): Promise<{ id: string; email: string; token: string }> {
+  async login(user: Pick<User, 'id' | 'email'>): Promise<{ id: string; email: string; token: string }> {
     try {
       const { id, email } = user;
       return {

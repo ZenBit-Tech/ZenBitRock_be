@@ -17,11 +17,7 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        UserService,
-        JwtService,
-      ],
+      providers: [AuthService, UserService, JwtService],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
@@ -33,23 +29,23 @@ describe('AuthService', () => {
     it('should validate user', async () => {
       const email = 'test@example.com';
       const password = 'padffeefe123';
-      const user: User = { id: '1qwer', email, password: await argon2.hash(password) };
+
+      const user = new User();
 
       jest.spyOn(userService, 'findOne').mockResolvedValueOnce(user);
       jest.spyOn(argon2, 'verify').mockResolvedValueOnce(true);
 
       await expect(authService.validateUser(email, password)).resolves.toEqual(user);
     });
-
   });
 
   describe('login', () => {
     it('should generate a token and return user email', async () => {
-      const user: User = { id: '1qwer', email: 'test@example.com', password: 'hashedpassword' };
+      const user: Partial<User> = { id: '1qwer', email: 'test@example.com', password: 'hashedpassword' };
 
       jest.spyOn(jwtService, 'sign').mockReturnValueOnce('generatedToken');
 
-      const result = await authService.login(user);
+      const result = await authService.login({ id: user.id, email: user.email });
 
       expect(result).toEqual({
         id: user.id,
@@ -57,6 +53,5 @@ describe('AuthService', () => {
         token: 'generatedToken',
       });
     });
-
   });
 });
