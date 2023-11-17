@@ -1,4 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailRecipientDto } from './dto/email-recipient-dto';
 import { EmailService } from './email.service';
@@ -14,6 +20,18 @@ export class EmailController {
   })
   @ApiBody({ type: EmailRecipientDto })
   async sendEmailVerificationCode(@Body() recipientData: EmailRecipientDto) {
-    return await this.emailService.sendEmailVerificationCode(recipientData.email);
+    try {
+      return await this.emailService.sendEmailVerificationCode(
+        recipientData.email,
+      );
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Unable to send verification code',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
