@@ -12,7 +12,15 @@ describe('EmailService', () => {
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [EmailService, { provide: UserService, useValue: { findByEmail: jest.fn(), updateById: jest.fn() } }, ConfigService, { provide: MailerService, useValue: { sendMail: jest.fn() } }],
+      providers: [
+        EmailService,
+        {
+          provide: UserService,
+          useValue: { findByEmail: jest.fn(), updateById: jest.fn() },
+        },
+        ConfigService,
+        { provide: MailerService, useValue: { sendMail: jest.fn() } },
+      ],
     }).compile();
 
     userService = moduleRef.get(UserService);

@@ -12,7 +12,15 @@ describe('EmailController', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [EmailController],
-      providers: [EmailService, { provide: UserService, useValue: { findByEmail: jest.fn(), updateById: jest.fn() } }, ConfigService, { provide: MailerService, useValue: { sendMail: jest.fn() } }],
+      providers: [
+        EmailService,
+        {
+          provide: UserService,
+          useValue: { findByEmail: jest.fn(), updateById: jest.fn() },
+        },
+        ConfigService,
+        { provide: MailerService, useValue: { sendMail: jest.fn() } },
+      ],
     }).compile();
 
     emailService = moduleRef.get(EmailService);
@@ -23,9 +31,13 @@ describe('EmailController', () => {
     it('should send email verification code', async () => {
       const result = ['test'];
       const email = 'test@gmail.com';
-      jest.spyOn(emailService, 'sendEmailVerificationCode').mockResolvedValueOnce(result);
+      jest
+        .spyOn(emailService, 'sendEmailVerificationCode')
+        .mockResolvedValueOnce(result);
 
-      expect(await emailController.sendEmailVerificationCode({ email })).toBe(result);
+      expect(await emailController.sendEmailVerificationCode({ email })).toBe(
+        result,
+      );
     });
   });
 });
