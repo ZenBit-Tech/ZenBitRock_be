@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UpdateResult } from 'typeorm';
 
 import * as argon2 from 'argon2';
 
@@ -34,7 +35,7 @@ export class AuthService {
     }
   }
 
-  async login(user: User) : Promise<{ id: string; email: string; token: string }> {
+  async login(user: Pick<User, 'id' | 'email'>): Promise<{ id: string; email: string; token: string }> {
     try {
       const { id, email } = user;
       return {
@@ -45,5 +46,17 @@ export class AuthService {
     } catch (error) {
       throw new BadRequestException('Login failed');
     }
+  }
+
+  async confirmEmail(email: string, code: string): Promise<UpdateResult> {
+    const user: User = await this.userService.findByEmail(email);
+
+    if (!user) throw new BadRequestException("User doesn't exist!");
+
+    if (user.isVerified) throw new ForbiddenException('Email already activated');
+
+    if (code !== user.verificationCode) throw new ForbiddenException('Incorrect verifictaion code!');
+
+    return await this.userService.updateById(user.id, { isVerified: true });
   }
 }

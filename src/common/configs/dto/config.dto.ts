@@ -23,4 +23,10 @@ export class ConfigDto {
 
   @IsString()
   DATABASE_PASSWORD: string;
+
+  @IsString()
+  MAIL_USER: string;
+
+  @IsString()
+  MAIL_PASS: string;
 }
