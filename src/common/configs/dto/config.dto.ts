@@ -23,4 +23,20 @@ export class ConfigDto {
 
   @IsString()
   DATABASE_PASSWORD: string;
+
+  @IsNotEmpty()
+  @IsString()
+  JWT_SECRET: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_ACCESS_KEY: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_SECRET_ACCESS_KEY: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_S3_REGION: string;
 }

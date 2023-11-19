@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -14,7 +14,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<{ user: User; token: string }> {
     try {
@@ -49,6 +49,37 @@ export class UserService {
       });
     } catch (error) {
       throw new Error(`Error finding user: ${error.message}`);
+    }
+  }
+
+  async findOneById(id: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['verificationData'],
+      });
+      if (!user) {
+        throw new NotFoundException('Not found');
+      }
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAll(): Promise<object> {
+    try {
+      const data = await this.userRepository.find({
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+      if (!data) {
+        throw new NotFoundException('Not found');
+      }
+      return data;
+    } catch (error) {
+      throw error;
     }
   }
 }
