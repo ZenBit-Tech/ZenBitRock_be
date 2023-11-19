@@ -67,7 +67,7 @@ export class VerificationService {
 
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
-        throw new NotFoundException('Not found');
+        throw new NotFoundException('User not found');
       }
       if (user.verificationData) {
         throw new BadRequestException('Verification data already exist');
