@@ -9,10 +9,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { PutObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-// import { S3 } from 'aws-sdk'
 import { Repository } from 'typeorm';
 
 import { ConfigService } from 'common/configs/config.service';
