@@ -7,6 +7,8 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,6 +27,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateResult } from 'typeorm';
+import { RestorePasswordDto } from './dto/restore-password.dto';
 
 @Controller('auth')
 @ApiBearerAuth()
@@ -72,6 +75,31 @@ export class AuthController {
           error: 'Unable to confirm email!',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('restore-password')
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password restored successfully',
+    type: UpdateResult,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiBody({ type: RestorePasswordDto })
+  async restorePassword(
+    @Body() restorePasswordDto: RestorePasswordDto,
+  ): Promise<UpdateResult> {
+    try {
+      return await this.authService.resetPassword(
+        restorePasswordDto.email,
+        restorePasswordDto.password,
+        restorePasswordDto.code,
+      );
+    } catch (error) {
+      throw new BadRequestException(
+        'Password restoration failed: ' + error.message,
       );
     }
   }
