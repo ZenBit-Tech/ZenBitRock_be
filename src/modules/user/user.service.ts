@@ -67,12 +67,4 @@ export class UserService {
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
     return await this.userRepository.update(id, data);
   }
-
-  async updateByEmail(email: string, data: Partial<User>): Promise<UpdateResult> {
-    try {
-      return await this.userRepository.update(email, data);
-    } catch (error) {
-      throw new Error('Failed to update user by email');
-    }
-  }
 }
