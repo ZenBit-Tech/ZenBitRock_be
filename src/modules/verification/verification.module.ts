@@ -15,7 +15,7 @@ import { VerificationService } from './verification.service';
     ConfigModule,
   ThrottlerModule.forRoot([{
     ttl: 60000,
-    limit: 333,
+    limit: 3,
   }])],
   controllers: [VerificationController],
   providers: [VerificationService, {
