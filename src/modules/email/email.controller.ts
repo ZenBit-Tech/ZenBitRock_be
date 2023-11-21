@@ -1,11 +1,12 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Post,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { EmailRecipientDto } from './dto/email-recipient-dto';
 import { EmailService } from './email.service';
 
@@ -34,4 +35,23 @@ export class EmailController {
       );
     }
   }
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Send verification code for restoring password' })
+  @ApiBody({ type: EmailRecipientDto })
+  async sendCodeForRestorePassword(@Body() recipientData: EmailRecipientDto) {
+    try {
+      return await this.emailService.sendCodeForRestorePassword(
+        recipientData.email,
+      );
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Unable to send verification code',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
 }
