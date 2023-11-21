@@ -20,7 +20,7 @@ export class EmailService {
     private mailerService: MailerService,
   ) {}
 
-  async sendEmailVerificationCode(email: string): Promise<unknown> {
+  async sendEmailVerificationCode(email: string): Promise<void> {
     const user = await this.userService.findByEmail(email);
 
     if (!user) throw new UnauthorizedException(`User doesn't exist`);
