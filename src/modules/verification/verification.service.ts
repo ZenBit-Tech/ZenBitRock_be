@@ -15,8 +15,8 @@ import { Repository } from 'typeorm';
 
 import { ConfigService } from 'common/configs/config.service';
 import { User } from 'common/entities/user.entity';
+import { VerificationFileEntity } from 'common/entities/verification-file.entity';
 import { VerificationEntity } from 'common/entities/verification.entity';
-import { VerificationFileEntity } from 'src/common/entities/verification-file.entity';
 
 import { CreateVerificationDto } from './dto/create-verification.dto';
 import { UpoadFileDto } from './dto/upload-file.dto';
@@ -75,7 +75,7 @@ export class VerificationService {
 
       const fileData = await this.awsUpload(fileName, file);
       if (!fileData) {
-        throw new BadRequestException('Error uploading the file to the server. Try again.');
+        throw new BadRequestException('Error uploading the file to the server. Try again');
       }
       const verification = new VerificationEntity();
       verification.firstName = firstName;
