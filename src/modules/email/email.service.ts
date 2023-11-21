@@ -39,7 +39,7 @@ export class EmailService {
     });
   }
 
-  async sendCodeForRestorePassword(email: string): Promise<unknown> {
+  async sendCodeForRestorePassword(email: string): Promise<void> {
     const user = await this.userService.findByEmail(email);
 
     if (!user) throw new UnauthorizedException(`User doesn't exist`);
