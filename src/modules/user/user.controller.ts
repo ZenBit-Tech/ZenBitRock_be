@@ -23,7 +23,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('/')
-  async getAllUsers(): Promise<object> {
+  async getAllUsers(): Promise<User[] | []> {
     try {
       const data = await this.userService.getAll();
       return data;
@@ -36,7 +36,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('/id')
-  async getUserByUd(@Body() body: { id: string }): Promise<object> {
+  async getUserByUd(@Body() body: { id: string }): Promise<User> {
     try {
       const user = await this.userService.findOneById(body.id);
       return user;

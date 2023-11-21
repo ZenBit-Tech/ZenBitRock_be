@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, UsePipes, ValidationPipe, UploadedFile, Us
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { VerificationEntity } from 'src/common/entities/verification.entity';
+
 import { CreateVerificationDto } from './dto/create-verification.dto';
 import { VerificationService } from './verification.service';
 
@@ -14,10 +16,9 @@ export class VerificationController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('/')
-  async getAll(): Promise<object> {
+  async getAll(): Promise<VerificationEntity[] | []> {
     try {
-      const data = await this.verificationService.getAll();
-      return data;
+      return await this.verificationService.getAll();
     } catch (error) {
       throw error;
     }

@@ -106,7 +106,7 @@ export class VerificationService {
     }
   }
 
-  async getAll(): Promise<object> {
+  async getAll(): Promise<VerificationEntity[] | []> {
     try {
       const data = await this.verificationRepository.find();
       if (!data) {

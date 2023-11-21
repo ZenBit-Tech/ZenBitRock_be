@@ -67,7 +67,7 @@ export class UserService {
     }
   }
 
-  async getAll(): Promise<object> {
+  async getAll(): Promise<User[] | []> {
     try {
       const data = await this.userRepository.find({
         order: {
