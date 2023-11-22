@@ -39,4 +39,10 @@ export class ConfigDto {
   @IsNotEmpty()
   @IsString()
   AWS_S3_REGION: string;
+
+  @IsString()
+  MAIL_USER: string;
+
+  @IsString()
+  MAIL_PASS: string;
 }

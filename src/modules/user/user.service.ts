@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as argon2 from 'argon2';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 
 import { User } from 'src/common/entities/user.entity';
 
@@ -80,6 +80,28 @@ export class UserService {
       return data;
     } catch (error) {
       throw error;
+
+  async findByEmail(email: string): Promise<User> {
+    try {
+      return await this.userRepository.findOne({
+        where: {
+          email,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Error finding user: ${error.message}`);
+    }
+  }
+
+  async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
+    return await this.userRepository.update(id, data);
+  }
+
+  async updateByEmail(email: string, data: Partial<User>): Promise<UpdateResult> {
+    try {
+      return await this.userRepository.update(email, data);
+    } catch (error) {
+      throw new Error('Failed to update user by email');
     }
   }
 }

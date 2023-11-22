@@ -1,48 +1,90 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UpdateResult } from 'typeorm';
 
-import { Repository } from 'typeorm';
+import * as argon2 from 'argon2';
 
-import { Auth } from 'src/common/entities/auth.entity';
+import { User } from 'src/common/entities/user.entity';
 
-import { AuthDto } from './dto/auth.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(Auth)
-    private readonly authRepository: Repository<Auth>,
+    private readonly userService: UserService,
+    private jwtService: JwtService,
   ) {}
 
-  public async signUp(signUpDto: AuthDto): Promise<void> {
+  async validateUser(email: string, password: string): Promise<User> {
     try {
-      const { email } = signUpDto;
-      const { name } = signUpDto;
+      const user = await this.userService.findOne(email);
 
-      const result = await this.authRepository
-        .createQueryBuilder('auth')
-        .where('auth.email = :email OR auth.name = :name', {
-          email,
-          name,
-        })
-        .getOne();
-
-      if (result) {
-        throw new BadRequestException('User with this name or email already registered');
+      if (!user) {
+        throw new BadRequestException('User not found');
       }
 
-      await this.authRepository.createQueryBuilder('auth').insert().values(signUpDto).execute();
+      const passwordIsMatch = await argon2.verify(user.password, password);
+
+      if (user && passwordIsMatch) {
+        return user;
+      }
+
+      throw new BadRequestException('Email or password are incorrect');
     } catch (error) {
-      throw error;
+      throw new BadRequestException('Validation failed');
     }
   }
 
-  public async getAllRegistration(): Promise<AuthDto[]> {
+  async login(
+    user: Pick<User, 'id' | 'email'>,
+  ): Promise<{ id: string; email: string; token: string }> {
     try {
-      const result = await this.authRepository.createQueryBuilder('auth').getMany();
-      return result;
+      const { id, email } = user;
+      return {
+        id,
+        email,
+        token: this.jwtService.sign({ id: user.id, email: user.email }),
+      };
     } catch (error) {
-      throw error;
+      throw new BadRequestException('Login failed');
+    }
+  }
+
+  async confirmEmail(email: string, code: string): Promise<UpdateResult> {
+    const user: User = await this.userService.findByEmail(email);
+
+    if (!user) throw new BadRequestException("User doesn't exist!");
+
+    if (user.isVerified)
+      throw new ForbiddenException('Email already activated');
+
+    if (code !== user.verificationCode)
+      throw new ForbiddenException('Incorrect verifictaion code!');
+
+    return await this.userService.updateById(user.id, { isVerified: true });
+  }
+
+  async resetPassword(
+    email: string,
+    password: string,
+    code: string,
+  ): Promise<UpdateResult> {
+    try {
+      const user = await this.userService.findByEmail(email);
+
+      if (!user || code !== user.verificationCode) {
+        throw new BadRequestException('Invalid code');
+      }
+      const hashedPassword = await argon2.hash(password);
+      return await this.userService.updateByEmail(email, {
+        password: hashedPassword,
+      });
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
   }
 }
