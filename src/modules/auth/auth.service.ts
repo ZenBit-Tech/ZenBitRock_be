@@ -17,7 +17,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, password: string): Promise<User> {
     try {
@@ -59,11 +59,13 @@ export class AuthService {
 
     if (!user) throw new BadRequestException("User doesn't exist!");
 
+    if (code !== user.verificationCode)
+      throw new ForbiddenException('Incorrect verification code!');
+
     if (user.isVerified)
       throw new ForbiddenException('Email already activated');
 
-    if (code !== user.verificationCode)
-      throw new ForbiddenException('Incorrect verifictaion code!');
+
 
     return await this.userService.updateById(user.id, { isVerified: true });
   }
