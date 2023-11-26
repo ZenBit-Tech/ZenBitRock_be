@@ -5,9 +5,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UpdateResult } from 'typeorm';
 
 import * as argon2 from 'argon2';
+import { UpdateResult } from 'typeorm';
 
 import { User } from 'src/common/entities/user.entity';
 
