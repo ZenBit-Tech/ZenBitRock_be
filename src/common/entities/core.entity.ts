@@ -7,6 +7,6 @@ export abstract class CoreEntity extends BaseEntity {
   @CreateDateColumn({ type: 'datetime', name: 'created_at' })
   public createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', name: 'updated_at' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at', default: () => 'CURRENT_TIMESTAMP' })
   public updatedAt: Date;
 }
