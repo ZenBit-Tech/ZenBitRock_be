@@ -15,8 +15,6 @@ import { Repository } from 'typeorm';
 
 import { ConfigService } from 'common/configs/config.service';
 import { User } from 'common/entities/user.entity';
-import { VerificationFileEntity } from 'common/entities/verification-file.entity';
-import { VerificationEntity } from 'common/entities/verification.entity';
 
 import { CreateVerificationDto } from './dto/create-verification.dto';
 import { UpoadFileDto } from './dto/upload-file.dto';
@@ -24,8 +22,6 @@ import { UpoadFileDto } from './dto/upload-file.dto';
 @Injectable()
 export class VerificationService {
   constructor(
-    @InjectRepository(VerificationEntity)
-    private readonly verificationRepository: Repository<VerificationEntity>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @Inject(forwardRef(() => ConfigService))
@@ -41,7 +37,7 @@ export class VerificationService {
     },
   });
 
-  async create(
+  async updateUserVerificationData(
     fileName: string,
     file: Buffer,
     verificationData: CreateVerificationDto,
@@ -69,50 +65,30 @@ export class VerificationService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      if (user.verificationData) {
-        throw new BadRequestException('Verification data already exist');
-      }
 
       const fileData = await this.awsUpload(fileName, file);
       if (!fileData) {
         throw new BadRequestException('Error uploading the file to the server. Try again');
       }
-      const verification = new VerificationEntity();
-      verification.firstName = firstName;
-      verification.lastName = lastName;
-      verification.role = role;
-      verification.gender = gender;
-      verification.dateOfBirth = dateOfBirth;
-      verification.nationality = nationality;
-      verification.identity = identity;
-      verification.status = status;
-      verification.street = street;
-      verification.city = city;
-      verification.state = state;
-      verification.zip = zip;
-      verification.country = country;
-      verification.phone = phone;
-      verification.user = user;
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.role = role;
+      user.gender = gender;
+      user.dateOfBirth = dateOfBirth;
+      user.nationality = nationality;
+      user.identity = identity;
+      user.status = status;
+      user.street = street;
+      user.city = city;
+      user.state = state;
+      user.zip = zip;
+      user.country = country;
+      user.phone = phone;
+      user.fileName = fileData.fileName;
+      user.fileUrl = fileData.fileUrl;
 
-      const verificationFileEntity = new VerificationFileEntity();
-      verificationFileEntity.fileName = fileData.fileName;
-      verificationFileEntity.fileUrl = fileData.fileUrl;
-      verification.files = [verificationFileEntity];
-
-      await this.verificationRepository.save(verification);
-      throw new HttpException('Created', HttpStatus.CREATED);
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getAll(): Promise<VerificationEntity[] | []> {
-    try {
-      const data = await this.verificationRepository.find();
-      if (!data) {
-        throw new NotFoundException('Not found');
-      }
-      return data;
+      await this.userRepository.update(userId, user);
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;
     }

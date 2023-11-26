@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { Controller, Body, UsePipes, ValidationPipe, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, Patch } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
-import { VerificationEntity } from 'src/common/entities/verification.entity';
 
 import { CreateVerificationDto } from './dto/create-verification.dto';
 import { VerificationService } from './verification.service';
@@ -12,22 +10,10 @@ import { VerificationService } from './verification.service';
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) { }
 
-  @ApiOperation({ summary: 'Getting all verifications' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('/')
-  async getAll(): Promise<VerificationEntity[] | []> {
-    try {
-      return await this.verificationService.getAll();
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  @ApiOperation({ summary: 'Creating verification' })
-  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiOperation({ summary: 'Updating user verification data' })
+  @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('/create')
+  @Patch('/update')
   @UsePipes(new ValidationPipe())
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile(
@@ -38,7 +24,8 @@ export class VerificationController {
     }),
   ) file: Express.Multer.File, @Body() verificationData: CreateVerificationDto): Promise<void> {
     try {
-      await this.verificationService.create(file.originalname, file.buffer, verificationData);
+      await this.verificationService.updateUserVerificationData(
+        file.originalname, file.buffer, verificationData);
     } catch (error) {
       throw error;
     }

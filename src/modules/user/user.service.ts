@@ -56,7 +56,6 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: { id },
-        relations: ['verificationData'],
       });
       if (!user) {
         throw new NotFoundException('Not found');
@@ -80,6 +79,8 @@ export class UserService {
       return data;
     } catch (error) {
       throw error;
+    }
+  }
 
   async findByEmail(email: string): Promise<User> {
     try {

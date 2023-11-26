@@ -5,13 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule } from 'common/configs/config.module';
 import { User } from 'common/entities/user.entity';
-import { VerificationEntity } from 'common/entities/verification.entity';
 
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VerificationEntity, User]),
+  imports: [TypeOrmModule.forFeature([User]),
     ConfigModule,
   ThrottlerModule.forRoot([{
     ttl: 60000,
