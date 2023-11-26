@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
@@ -63,9 +64,7 @@ export class AuthService {
       throw new ForbiddenException('Incorrect verification code!');
 
     if (user.isVerified)
-      throw new ForbiddenException('Email already activated');
-
-
+      throw new ConflictException('Email already activated');
 
     return await this.userService.updateById(user.id, { isVerified: true });
   }
