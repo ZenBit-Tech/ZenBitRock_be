@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Body, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
+
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
@@ -19,9 +21,11 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Getting all users' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
+  @UseGuards(JwtAuthGuard)
   @Get('/')
   async getAllUsers(): Promise<User[] | []> {
     try {
@@ -32,9 +36,11 @@ export class UserController {
     }
   }
 
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Getting user by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
+  @UseGuards(JwtAuthGuard)
   @Post('/id')
   async getUserByUd(@Body() body: { id: string }): Promise<User> {
     try {
