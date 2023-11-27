@@ -38,56 +38,24 @@ export class VerificationService {
   });
 
   async updateUserVerificationData(
-    fileName: string,
+    originalName: string,
     file: Buffer,
-    verificationData: CreateVerificationDto,
+    { userId, ...verificationData }: CreateVerificationDto,
   ): Promise<void> {
     try {
-      const {
-        firstName,
-        lastName,
-        role,
-        gender,
-        dateOfBirth,
-        nationality,
-        identity,
-        status,
-        street,
-        city,
-        state,
-        zip,
-        country,
-        phone,
-        userId,
-      } = verificationData;
-
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      const fileData = await this.awsUpload(fileName, file);
+      const fileData = await this.awsUpload(originalName, file);
       if (!fileData) {
         throw new BadRequestException('Error uploading the file to the server. Try again');
       }
-      user.firstName = firstName;
-      user.lastName = lastName;
-      user.role = role;
-      user.gender = gender;
-      user.dateOfBirth = dateOfBirth;
-      user.nationality = nationality;
-      user.identity = identity;
-      user.status = status;
-      user.street = street;
-      user.city = city;
-      user.state = state;
-      user.zip = zip;
-      user.country = country;
-      user.phone = phone;
-      user.fileName = fileData.fileName;
-      user.fileUrl = fileData.fileUrl;
+      const { fileName, fileUrl } = fileData;
+      const updatedUser = { ...verificationData, fileName, fileUrl };
 
-      await this.userRepository.update(userId, user);
+      await this.userRepository.update(userId, updatedUser);
       throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;
