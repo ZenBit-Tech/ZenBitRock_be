@@ -1,15 +1,11 @@
-import { Controller, Body, UsePipes, ValidationPipe, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Body, UsePipes, ValidationPipe, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, Patch } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { CreateVerificationDto } from './dto/create-verification.dto';
 import { VerificationService } from './verification.service';
 
-@ApiBearerAuth()
 @ApiTags('User`s verification data')
-@UseGuards(JwtAuthGuard)
 @Controller('/verification')
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) { }
