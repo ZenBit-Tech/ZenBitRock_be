@@ -6,6 +6,7 @@ import { ConfigModule } from './common/configs/config.module';
 import { typeOrmAsyncConfig } from './common/configs/database/typeorm-config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
+import { VerificationModule } from './modules/verification/verification.module';
 import { EmailModule } from './modules/email/email.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigService } from './common/configs/config.service';
@@ -17,6 +18,7 @@ import { ConfigService } from './common/configs/config.service';
     AuthModule,
     UserModule,
     EmailModule,
+    VerificationModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -35,4 +37,4 @@ import { ConfigService } from './common/configs/config.service';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

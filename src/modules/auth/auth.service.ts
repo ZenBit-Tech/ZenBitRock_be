@@ -1,12 +1,13 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UpdateResult } from 'typeorm';
 
 import * as argon2 from 'argon2';
+import { UpdateResult } from 'typeorm';
 
 import { User } from 'src/common/entities/user.entity';
 
@@ -17,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, password: string): Promise<User> {
     try {
@@ -59,11 +60,11 @@ export class AuthService {
 
     if (!user) throw new BadRequestException("User doesn't exist!");
 
-    if (user.isVerified)
-      throw new ForbiddenException('Email already activated');
-
     if (code !== user.verificationCode)
-      throw new ForbiddenException('Incorrect verifictaion code!');
+      throw new ForbiddenException('Incorrect verification code!');
+
+    if (user.isVerified)
+      throw new ConflictException('Email already activated');
 
     return await this.userService.updateById(user.id, { isVerified: true });
   }
