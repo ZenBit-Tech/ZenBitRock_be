@@ -1,9 +1,12 @@
 import { Test } from '@nestjs/testing';
+
 import { MailerService } from '@nestjs-modules/mailer';
-import { UserService } from 'src/modules/user/user.service';
+
 import { ConfigService } from 'src/common/configs/config.service';
-import { EmailService } from './email.service';
 import { User } from 'src/common/entities/user.entity';
+import { UserService } from 'src/modules/user/user.service';
+
+import { EmailService } from './email.service';
 
 describe('EmailService', () => {
   let mailerService: MailerService;

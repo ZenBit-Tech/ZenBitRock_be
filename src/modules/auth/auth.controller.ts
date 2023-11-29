@@ -17,17 +17,19 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 
+import { UpdateResult } from 'typeorm';
+
 import { User } from 'src/common/entities/user.entity';
 
 import { CreateUserDto } from '../user/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { RestorePasswordDto } from './dto/restore-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { ConfirmEmailDto } from './dto/confirm-email.dto';
-import { UpdateResult } from 'typeorm';
-import { RestorePasswordDto } from './dto/restore-password.dto';
 
 @Controller('auth')
 @ApiBearerAuth()
@@ -67,7 +69,7 @@ export class AuthController {
   ): Promise<UpdateResult> {
     try {
       const { code, email } = confirmEmailDto;
-      return this.authService.confirmEmail(email, code);
+      return await this.authService.confirmEmail(email, code);
     } catch (error) {
       throw new HttpException(
         {
@@ -99,8 +101,35 @@ export class AuthController {
       );
     } catch (error) {
       throw new BadRequestException(
-        'Password restoration failed: ' + error.message,
+        `Password restoration failed: ${error.message}`,
       );
+    }
+  }
+
+  @Post('change-password')
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    type: UpdateResult,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBody({ type: ChangePasswordDto })
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Request() req,
+  ): Promise<UpdateResult> {
+    try {
+      const userEmail = req.user.email;
+      return await this.authService.changePassword(
+        userEmail,
+        changePasswordDto.oldPassword,
+        changePasswordDto.newPassword,
+      );
+    } catch (error) {
+      throw new BadRequestException(`Password change failed: ${error.message}`);
     }
   }
 }

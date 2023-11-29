@@ -1,4 +1,3 @@
-import { MailerService } from '@nestjs-modules/mailer';
 import {
   BadRequestException,
   Inject,
@@ -6,8 +5,13 @@ import {
   UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
+
+import { MailerService } from '@nestjs-modules/mailer';
+
 import { ConfigService } from 'src/common/configs/config.service';
+
 import { UserService } from '../user/user.service';
+
 import { CODE_LENGTH, generateCode } from './lib';
 
 @Injectable()
@@ -23,7 +27,7 @@ export class EmailService {
   async sendEmailVerificationCode(email: string): Promise<unknown> {
     const user = await this.userService.findByEmail(email);
 
-    if (!user) throw new UnauthorizedException(`User doesn't exist`);
+    if (!user) throw new UnauthorizedException('User doesn\'t exist');
     const code = generateCode(CODE_LENGTH);
 
     await this.userService.updateById(user.id, {
@@ -42,7 +46,7 @@ export class EmailService {
   async sendCodeForRestorePassword(email: string): Promise<void> {
     const user = await this.userService.findByEmail(email);
 
-    if (!user) throw new UnauthorizedException(`User doesn't exist`);
+    if (!user) throw new UnauthorizedException('User doesn\'t exist');
     const code = generateCode(CODE_LENGTH);
 
     await this.userService.updateById(user.id, {

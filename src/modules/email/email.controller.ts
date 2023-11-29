@@ -7,6 +7,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 import { EmailRecipientDto } from './dto/email-recipient-dto';
 import { EmailService } from './email.service';
 
@@ -35,6 +36,7 @@ export class EmailController {
       );
     }
   }
+
   @Post('forgot-password')
   @ApiOperation({ summary: 'Send verification code for restoring password' })
   @ApiBody({ type: EmailRecipientDto })
@@ -53,5 +55,4 @@ export class EmailController {
       );
     }
   }
-
 }

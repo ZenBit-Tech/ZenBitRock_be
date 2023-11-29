@@ -65,7 +65,7 @@ export class UserService {
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
-    return await this.userRepository.update(id, data);
+    return this.userRepository.update(id, data);
   }
 
   async updateByEmail(email: string, data: Partial<User>): Promise<UpdateResult> {

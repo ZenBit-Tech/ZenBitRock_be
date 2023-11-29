@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
+
 import { MailerService } from '@nestjs-modules/mailer';
-import { UserService } from 'src/modules/user/user.service';
+
 import { ConfigService } from 'src/common/configs/config.service';
+import { UserService } from 'src/modules/user/user.service';
+
 import { EmailController } from './email.controller';
 import { EmailService } from './email.service';
 

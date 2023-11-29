@@ -1,11 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
 import { BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import * as argon2 from 'argon2';
-import { UserService } from '../user/user.service';
-import { User } from 'src/common/entities/user.entity';
 import { UpdateResult } from 'typeorm';
+
+import { User } from 'src/common/entities/user.entity';
+
+import { UserService } from '../user/user.service';
+
+import { AuthService } from './auth.service';
 
 jest.mock('../user/user.service');
 jest.mock('@nestjs/jwt');

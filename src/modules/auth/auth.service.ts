@@ -1,12 +1,15 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UpdateResult } from 'typeorm';
 
 import * as argon2 from 'argon2';
+import { UpdateResult } from 'typeorm';
 
 import { User } from 'src/common/entities/user.entity';
 
@@ -59,13 +62,15 @@ export class AuthService {
 
     if (!user) throw new BadRequestException("User doesn't exist!");
 
-    if (user.isVerified)
-      throw new ForbiddenException('Email already activated');
+    if (code !== user.verificationCode) {
+      throw new ForbiddenException('Incorrect verification code!');
+    }
 
-    if (code !== user.verificationCode)
-      throw new ForbiddenException('Incorrect verifictaion code!');
+    if (user.isVerified) {
+      throw new ConflictException('Email already activated');
+    }
 
-    return await this.userService.updateById(user.id, { isVerified: true });
+    return this.userService.updateById(user.id, { isVerified: true });
   }
 
   async resetPassword(
@@ -85,6 +90,39 @@ export class AuthService {
       });
     } catch (error) {
       throw new BadRequestException(error.message);
+    }
+  }
+
+  async verifyOldPassword(
+    email: string,
+    oldPassword: string,
+  ): Promise<boolean> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return argon2.verify(user.password, oldPassword);
+  }
+
+  async changePassword(
+    id: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<UpdateResult> {
+    try {
+      const isOldPasswordValid = await this.verifyOldPassword(id, oldPassword);
+
+      if (!isOldPasswordValid) {
+        throw new UnauthorizedException('Invalid old password');
+      }
+
+      const newPasswordHash = await argon2.hash(newPassword);
+      return await this.userService.updateById(id, {
+        password: newPasswordHash,
+      });
+    } catch (error) {
+      throw new BadRequestException(`Password change failed: ${error.message}`);
     }
   }
 }
