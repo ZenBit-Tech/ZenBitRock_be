@@ -1,15 +1,18 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { MailerModule } from '@nestjs-modules/mailer';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './common/configs/config.module';
+import { ConfigService } from './common/configs/config.service';
 import { typeOrmAsyncConfig } from './common/configs/database/typeorm-config';
+import { QobrixProxyMiddleware } from './middleware/qobrix.middleware';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmailModule } from './modules/email/email.module';
 import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
-import { EmailModule } from './modules/email/email.module';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { ConfigService } from './common/configs/config.service';
 
 @Module({
   imports: [
@@ -37,4 +40,10 @@ import { ConfigService } from './common/configs/config.service';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+
+export class AppModule implements NestModule {
+  // eslint-disable-next-line class-methods-use-this
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(QobrixProxyMiddleware).forRoutes('/qobrix-proxy');
+  }
+}
