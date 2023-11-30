@@ -9,6 +9,7 @@ import {
   HttpStatus,
   ForbiddenException,
   BadRequestException,
+  Param,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -28,6 +29,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateResult } from 'typeorm';
 import { RestorePasswordDto } from './dto/restore-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { VerifyPasswordDto } from './dto/verify-password.dto';
 
 @Controller('auth')
 @ApiBearerAuth()
@@ -49,6 +52,7 @@ export class AuthController {
     description: 'Successfully retrieved user profile',
     type: CreateUserDto,
   })
+
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<User> {
@@ -103,4 +107,43 @@ export class AuthController {
       );
     }
   }
+  
+ @Post('verify-password')
+ @UseGuards(JwtAuthGuard)
+  async verifyOldPassword( @Body() verifyPasswordDto: VerifyPasswordDto,
+  @Request() req,
+  ): Promise<boolean> {
+
+    return this.authService.verifyOldPassword(req.user.email, verifyPasswordDto.oldPassword);
+  
+  }
+  
+  @Post('change-password')
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    type: UpdateResult,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBody({ type: ChangePasswordDto })
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Request() req,
+  ): Promise<UpdateResult> {
+    try {
+      const userEmail = req.user.email;
+      return await this.authService.changePassword(
+        userEmail,
+        changePasswordDto.oldPassword,
+        changePasswordDto.newPassword,
+      );
+    } catch (error) {
+      throw new BadRequestException(`Password change failed: ${error.message}`);
+    }
+  }
+
+
 }
