@@ -27,7 +27,6 @@ export class UserController {
   @ApiOperation({ summary: 'Getting all users' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-
   async getAllUsers(): Promise<User[]> {
     try {
       const data = await this.userService.getAll();
