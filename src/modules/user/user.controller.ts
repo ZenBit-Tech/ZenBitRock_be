@@ -9,8 +9,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
@@ -23,10 +21,12 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Get('/')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Getting all users' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('/')
   async getAllUsers(): Promise<User[]> {
     try {
       const data = await this.userService.getAll();
@@ -36,10 +36,12 @@ export class UserController {
     }
   }
 
+  @Post('/id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Getting user by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('/id')
   async getUserByUd(@Body() body: { id: string }): Promise<User> {
     try {
       const user = await this.userService.findOneById(body.id);

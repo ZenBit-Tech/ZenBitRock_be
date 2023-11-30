@@ -10,10 +10,10 @@ import { VerificationService } from './verification.service';
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) { }
 
+  @Patch('/update')
   @ApiOperation({ summary: 'Updating user verification data' })
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @Patch('/update')
   @UsePipes(new ValidationPipe())
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile(
