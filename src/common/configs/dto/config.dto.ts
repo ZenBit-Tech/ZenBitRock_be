@@ -45,4 +45,7 @@ export class ConfigDto {
 
   @IsString()
   MAIL_PASS: string;
+
+  @IsString()
+  QOBRIX_BASE_URL: string;
 }
