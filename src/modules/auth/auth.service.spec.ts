@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserService } from '../user/user.service';
@@ -44,18 +43,14 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should generate a token and return user email', async () => {
-      const user: Partial<User> = {
-        id: '1qwer',
-        email: 'test@example.com',
-        password: 'hashedpassword',
-      };
+      const user = new User();
+      user.id = '1qwer';
+      user.email = 'test@example.com';
+      user.password = 'hashedpassword';
 
       jest.spyOn(jwtService, 'sign').mockReturnValueOnce('generatedToken');
 
-      const result = await authService.login({
-        id: user.id,
-        email: user.email,
-      });
+      const result = await authService.login(user);
 
       expect(result).toEqual({
         id: user.id,

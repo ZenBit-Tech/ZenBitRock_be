@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
-
 jest.mock('./auth.service');
 
 describe('AuthController', () => {
@@ -21,7 +20,15 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('should call AuthService.login and return the result', async () => {
-      const user = { id: '1', email: 'test@example.com', token: 'generatedToken' };
+      const user = {
+        user: {
+          id: '1',
+          email: 'test@example.com',
+          isVerified: false,
+        },
+
+        token: 'generatedToken',
+      };
       jest.spyOn(authService, 'login').mockResolvedValueOnce(user);
 
       const result = await authController.login({ user });
@@ -41,6 +48,4 @@ describe('AuthController', () => {
       expect(result).toEqual(user);
     });
   });
-
-  
 });
