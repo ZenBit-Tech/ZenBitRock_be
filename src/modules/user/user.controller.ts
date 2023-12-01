@@ -10,7 +10,7 @@ import { UserService } from './user.service';
 
 @Controller('user')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+
 export class UserController {
   constructor(private readonly userService: UserService) { }
 

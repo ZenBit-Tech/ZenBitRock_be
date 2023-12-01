@@ -111,7 +111,7 @@ export class AuthService {
     newPassword: string,
   ): Promise<UpdateResult> {
     try {
-      console.log(email);
+      
       const isOldPasswordValid = await this.verifyOldPassword(email, oldPassword);
 
       if (!isOldPasswordValid) {
