@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
-
+import { UserAuthResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,9 +18,9 @@ export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<{ user: User; token: string }> {
+  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
       const existUser = await this.userRepository.findOne({
         where: {
@@ -34,7 +38,10 @@ export class UserService {
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
-      return { user, token };
+      return {
+        user: { email: user.email, id: user.id, isVerified: user.isVerified },
+        token,
+      };
     } catch (error) {
       throw new Error(`Error creating user: ${error.message}`);
     }
@@ -98,9 +105,12 @@ export class UserService {
     return await this.userRepository.update(id, data);
   }
 
-  async updateByEmail(email: string, data: Partial<User>): Promise<UpdateResult> {
+  async updateByEmail(
+    email: string,
+    data: Partial<User>,
+  ): Promise<UpdateResult> {
     try {
-      return await this.userRepository.update({email}, data);
+      return await this.userRepository.update({ email }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
     }

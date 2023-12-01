@@ -7,9 +7,7 @@ import {
   Body,
   HttpException,
   HttpStatus,
-  ForbiddenException,
   BadRequestException,
-  Param,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -17,11 +15,8 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-
-import { User } from 'src/common/entities/user.entity';
-
+import { UserAuthResponse, UserProfileResponse } from 'src/common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -41,7 +36,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Endpoint to sign in user with email and password' })
   @ApiBody({ type: AuthDto })
   @UseGuards(LocalAuthGuard)
-  login(@Request() req): Promise<{ id: string; email: string; token: string }> {
+  login(@Request() req): Promise<UserAuthResponse> {
     return this.authService.login(req.user);
   }
 
@@ -52,10 +47,9 @@ export class AuthController {
     description: 'Successfully retrieved user profile',
     type: CreateUserDto,
   })
-
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req): Promise<User> {
+  async getProfile(@Request() req): Promise<UserProfileResponse> {
     return req.user;
   }
 
@@ -107,17 +101,19 @@ export class AuthController {
       );
     }
   }
-  
- @Post('verify-password')
- @UseGuards(JwtAuthGuard)
-  async verifyOldPassword( @Body() verifyPasswordDto: VerifyPasswordDto,
-  @Request() req,
-  ): Promise<boolean> {
 
-    return this.authService.verifyOldPassword(req.user.email, verifyPasswordDto.oldPassword);
-  
+  @Post('verify-password')
+  @UseGuards(JwtAuthGuard)
+  async verifyOldPassword(
+    @Body() verifyPasswordDto: VerifyPasswordDto,
+    @Request() req,
+  ): Promise<boolean> {
+    return this.authService.verifyOldPassword(
+      req.user.email,
+      verifyPasswordDto.oldPassword,
+    );
   }
-  
+
   @Post('change-password')
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({
@@ -144,6 +140,4 @@ export class AuthController {
       throw new BadRequestException(`Password change failed: ${error.message}`);
     }
   }
-
-
 }

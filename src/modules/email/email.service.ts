@@ -1,6 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import {
-  BadRequestException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -47,6 +46,7 @@ export class EmailService {
 
     await this.userService.updateById(user.id, {
       verificationCode: code,
+      isVerified: false,
     });
 
     return this.mailerService.sendMail({

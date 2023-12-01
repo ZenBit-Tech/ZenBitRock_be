@@ -9,18 +9,19 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { UserService } from '../user/user.service';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule, UserModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
         signOptions: { expiresIn: '30d' },
       }),
-      inject: [ConfigService],
+      inject: [ConfigService, UserService],
     }),
   ],
   controllers: [AuthController],

@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import * as argon2 from 'argon2';
 import { UpdateResult } from 'typeorm';
-
+import { UserAuthResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { UserService } from '../user/user.service';
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
     try {
@@ -42,14 +42,15 @@ export class AuthService {
     }
   }
 
-  async login(
-    user: Pick<User, 'id' | 'email'>,
-  ): Promise<{ id: string; email: string; token: string }> {
+  async login(user: User): Promise<UserAuthResponse> {
     try {
-      const { id, email } = user;
       return {
-        id,
-        email,
+        user: {
+          email: user.email,
+          id: user.id,
+          isVerified: user.isVerified,
+        },
+
         token: this.jwtService.sign({ id: user.id, email: user.email }),
       };
     } catch (error) {
@@ -65,8 +66,7 @@ export class AuthService {
     if (code !== user.verificationCode)
       throw new ForbiddenException('Incorrect verification code!');
 
-    if (user.isVerified)
-      throw new ConflictException('Email already activated');
+    if (user.isVerified) throw new ConflictException('Email already activated');
 
     return await this.userService.updateById(user.id, { isVerified: true });
   }
@@ -94,15 +94,16 @@ export class AuthService {
     email: string,
     oldPassword: string,
   ): Promise<boolean> {
-    try{const user = await this.userService.findByEmail(email);
+    try {
+      const user = await this.userService.findByEmail(email);
       if (!user) {
         throw new NotFoundException('User not found');
       }
-  
+
       return argon2.verify(user.password, oldPassword);
-    }catch (error) {
+    } catch (error) {
       throw new BadRequestException(error.message);
-    } 
+    }
   }
 
   async changePassword(
@@ -111,8 +112,10 @@ export class AuthService {
     newPassword: string,
   ): Promise<UpdateResult> {
     try {
-      
-      const isOldPasswordValid = await this.verifyOldPassword(email, oldPassword);
+      const isOldPasswordValid = await this.verifyOldPassword(
+        email,
+        oldPassword,
+      );
 
       if (!isOldPasswordValid) {
         throw new UnauthorizedException('Invalid old password');

@@ -1,6 +1,14 @@
-import { Controller, Post, Get, Body, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-
+import { UserAuthResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,14 +19,18 @@ import { UserService } from './user.service';
 @Controller('user')
 @ApiBearerAuth()
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Endpoint to register a new user', description: 'New user registration by providing email and password in the request body.' })
+  @ApiOperation({
+    summary: 'Endpoint to register a new user',
+    description:
+      'New user registration by providing email and password in the request body.',
+  })
   @ApiResponse({ status: 200, description: 'Successful registration' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @UsePipes(new ValidationPipe())
-  create(@Body() createUserDto: CreateUserDto): Promise<{ user: User; token: string }> {
+  create(@Body() createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     return this.userService.create(createUserDto);
   }
 
