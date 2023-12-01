@@ -100,7 +100,7 @@ export class UserService {
 
   async updateByEmail(email: string, data: Partial<User>): Promise<UpdateResult> {
     try {
-      return await this.userRepository.update(email, data);
+      return await this.userRepository.update({email}, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
     }

@@ -3,6 +3,8 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
@@ -86,6 +88,42 @@ export class AuthService {
       });
     } catch (error) {
       throw new BadRequestException(error.message);
+    }
+  }
+  async verifyOldPassword(
+    email: string,
+    oldPassword: string,
+  ): Promise<boolean> {
+    try{const user = await this.userService.findByEmail(email);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+  
+      return argon2.verify(user.password, oldPassword);
+    }catch (error) {
+      throw new BadRequestException(error.message);
+    } 
+  }
+
+  async changePassword(
+    email: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<UpdateResult> {
+    try {
+      
+      const isOldPasswordValid = await this.verifyOldPassword(email, oldPassword);
+
+      if (!isOldPasswordValid) {
+        throw new UnauthorizedException('Invalid old password');
+      }
+
+      const newPasswordHash = await argon2.hash(newPassword);
+      return await this.userService.updateByEmail(email, {
+        password: newPasswordHash,
+      });
+    } catch (error) {
+      throw new BadRequestException(`Password change failed: ${error.message}`);
     }
   }
 }
