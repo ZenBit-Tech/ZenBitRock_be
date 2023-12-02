@@ -77,21 +77,4 @@ export class CreateVerificationDto {
   @IsString()
   userId: string;
 
-  @ApiProperty({ example: '123456789', description: 'Cobrix contact id' })
-  @IsNotEmpty()
-  @IsString()
-  cobrixContactId: string;
-
-  @ApiProperty({ example: 'Blagovist', description: 'User agency name' })
-  @IsNotEmpty()
-  @IsString()
-  agencyName: string;
-
-  @ApiProperty({
-    example: 'Someting about me',
-    description: 'User information',
-  })
-  @IsNotEmpty()
-  @IsString()
-  description: string;
 }
