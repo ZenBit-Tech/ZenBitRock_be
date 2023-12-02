@@ -41,7 +41,8 @@ import { VerificationModule } from './modules/verification/verification.module';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
+  // eslint-disable-next-line class-methods-use-this
+  configure(consumer: MiddlewareConsumer): void {
     consumer.apply(QobrixProxyMiddleware).forRoutes('/qobrix-proxy/*');
   }
 }
