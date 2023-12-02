@@ -61,6 +61,12 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'fileName', default: null })
   fileName: string;
 
-  @Column({ type: 'varchar', length: 500, name: 'fileUrl', default: null })
+  @Column({ type: 'varchar', length: 1000, name: 'fileUrl', default: null })
   fileUrl: string;
+
+  @Column({ type: 'varchar', name: 'description', default: null })
+  description: string;
+
+  @Column({ type: 'varchar', name: 'agency', default: null })
+  agency: string;
 }

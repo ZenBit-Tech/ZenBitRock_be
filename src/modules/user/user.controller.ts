@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Patch,
   UsePipes,
   ValidationPipe,
   UseGuards,
@@ -10,11 +11,10 @@ import {
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserAuthResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 @ApiBearerAuth()
@@ -59,6 +59,19 @@ export class UserController {
     try {
       const user = await this.userService.findOneById(body.id);
       return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('/update')
+  @ApiOperation({ summary: 'Updating user data' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @UsePipes(new ValidationPipe())
+  async updateUser(@Body() userData: UpdateUserDto): Promise<void> {
+    try {
+      await this.userService.updateUserData(userData);
     } catch (error) {
       throw error;
     }

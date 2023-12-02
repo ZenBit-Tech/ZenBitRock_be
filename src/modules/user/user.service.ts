@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,6 +14,7 @@ import { UserAuthResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -113,6 +116,23 @@ export class UserService {
       return await this.userRepository.update({ email }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
+    }
+  }
+
+  async updateUserData(userData: UpdateUserDto): Promise<void> {
+    try {
+      const { userId, ...updatedFields } = userData;
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      await this.userRepository.update(userId, updatedFields);
+
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+    } catch (error) {
+      throw error;
     }
   }
 }
