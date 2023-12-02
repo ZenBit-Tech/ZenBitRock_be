@@ -61,7 +61,7 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'fileName', default: null })
   fileName: string;
 
-  @Column({ type: 'varchar', length: 500, name: 'fileUrl', default: null })
+  @Column({ type: 'varchar', name: 'fileUrl', default: null })
   fileUrl: string;
 
   @Column({ type: 'varchar', name: 'cobrixContactId', default: null })
