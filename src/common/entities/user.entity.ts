@@ -72,15 +72,4 @@ export class User extends CoreEntity {
 
   @Column({ type: 'varchar', name: 'description', default: null })
   description: string;
-
-  @Column({ type: 'varchar', name: 'avatarCloudinaryId', default: null })
-  avatarCloudinaryId: string;
-
-  @Column({
-    type: 'varchar',
-    length: 500,
-    name: 'avatarCloudinaryUrl',
-    default: null,
-  })
-  avatarCloudinaryUrl: string;
 }
