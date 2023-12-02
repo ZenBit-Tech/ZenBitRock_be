@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,8 +10,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
-import { UserAuthResponse } from 'src/common/types';
+
 import { User } from 'src/common/entities/user.entity';
+import { UserAuthResponse } from 'src/common/types';
 
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -18,7 +21,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
@@ -102,7 +105,11 @@ export class UserService {
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
-    return await this.userRepository.update(id, data);
+    try {
+      return await this.userRepository.update(id, data);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async updateByEmail(
@@ -113,6 +120,18 @@ export class UserService {
       return await this.userRepository.update({ email }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const deletedUser = await this.userRepository.delete({ id });
+
+      if (!deletedUser.affected) throw new NotFoundException('Not found');
+
+      throw new HttpException('User deleted successfully', HttpStatus.OK);
+    } catch (error) {
+      throw error;
     }
   }
 }

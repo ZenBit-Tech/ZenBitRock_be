@@ -2,14 +2,17 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   UsePipes,
   ValidationPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { UserAuthResponse } from 'src/common/types';
+
 import { User } from 'src/common/entities/user.entity';
+import { UserAuthResponse } from 'src/common/types';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -19,7 +22,7 @@ import { UserService } from './user.service';
 @Controller('user')
 @ApiBearerAuth()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   @ApiOperation({
@@ -42,8 +45,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async getAllUsers(): Promise<User[]> {
     try {
-      const data = await this.userService.getAll();
-      return data;
+      return await this.userService.getAll();
     } catch (error) {
       throw error;
     }
@@ -57,8 +59,21 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async getUserByUd(@Body() body: { id: string }): Promise<User> {
     try {
-      const user = await this.userService.findOneById(body.id);
-      return user;
+      return await this.userService.findOneById(body.id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete user by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async deleteUserByUd(@Query('id') id: string): Promise<void> {
+    try {
+      return await this.userService.delete(id);
     } catch (error) {
       throw error;
     }
