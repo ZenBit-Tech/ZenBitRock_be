@@ -58,11 +58,11 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'phone', default: null })
   phone: string;
 
-  @Column({ type: 'varchar', name: 'fileName', default: null })
-  fileName: string;
-
-  @Column({ type: 'varchar', length: 1000, name: 'fileUrl', default: null })
+  @Column({ type: 'varchar', name: 'fileUrl', default: null })
   fileUrl: string;
+
+  @Column({ type: 'varchar', name: 'avatarUrl', default: null })
+  avatarUrl: string;
 
   @Column({ type: 'varchar', name: 'qobrixContactId', default: null })
   qobrixContactId: string;
