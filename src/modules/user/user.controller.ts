@@ -4,6 +4,7 @@ import {
   Get,
   Delete,
   Body,
+  Patch,
   UsePipes,
   ValidationPipe,
   UseGuards,
@@ -17,6 +18,7 @@ import { UserAuthResponse } from 'src/common/types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -74,6 +76,19 @@ export class UserController {
   async deleteUserByUd(@Query('id') id: string): Promise<void> {
     try {
       return await this.userService.delete(id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('/update')
+  @ApiOperation({ summary: 'Updating user data' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @UsePipes(new ValidationPipe())
+  async updateUser(@Body() userData: UpdateUserDto): Promise<void> {
+    try {
+      await this.userService.updateUserData(userData);
     } catch (error) {
       throw error;
     }

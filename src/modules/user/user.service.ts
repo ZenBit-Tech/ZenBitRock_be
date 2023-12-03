@@ -15,6 +15,7 @@ import { User } from 'src/common/entities/user.entity';
 import { UserAuthResponse } from 'src/common/types';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -130,6 +131,23 @@ export class UserService {
       if (!deletedUser.affected) throw new NotFoundException('Not found');
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUserData(userData: UpdateUserDto): Promise<void> {
+    try {
+      const { userId, ...updatedFields } = userData;
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      await this.userRepository.update(userId, updatedFields);
+
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;
     }
