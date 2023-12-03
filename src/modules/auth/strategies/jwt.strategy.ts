@@ -28,6 +28,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         email: userDetails.email,
         id: userDetails.id,
         isVerified: userDetails.isVerified,
+        firstName: userDetails.firstName,
+        lastName: userDetails.lastName,
+        role: userDetails.role,
+        city: userDetails.city,
+        country: userDetails.country,
+        phone: userDetails.phone,
+        qobrixContactId: userDetails.qobrixContactId,
+        agencyName: userDetails.agencyName,
+        description: userDetails.description,
+        avatarUrl: userDetails.avatarUrl,
       };
     } catch (error) {
       throw new UnauthorizedException('JWT validation failed');
