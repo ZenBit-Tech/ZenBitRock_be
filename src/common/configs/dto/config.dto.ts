@@ -28,18 +28,6 @@ export class ConfigDto {
   @IsString()
   JWT_SECRET: string;
 
-  @IsNotEmpty()
-  @IsString()
-  AWS_ACCESS_KEY: string;
-
-  @IsNotEmpty()
-  @IsString()
-  AWS_SECRET_ACCESS_KEY: string;
-
-  @IsNotEmpty()
-  @IsString()
-  AWS_S3_REGION: string;
-
   @IsString()
   MAIL_USER: string;
 
