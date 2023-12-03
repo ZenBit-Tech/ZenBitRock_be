@@ -10,8 +10,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
-import { UserAuthResponse } from 'src/common/types';
+
+import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { User } from 'src/common/entities/user.entity';
+import { UserAuthResponse } from 'src/common/types';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,8 +22,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
@@ -105,7 +108,11 @@ export class UserService {
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
-    return await this.userRepository.update(id, data);
+    try {
+      return await this.userRepository.update(id, data);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async updateByEmail(
@@ -116,6 +123,18 @@ export class UserService {
       return await this.userRepository.update({ email }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const deletedUser = await this.userRepository.delete({ id });
+
+      if (!deletedUser.affected) throw new NotFoundException('Not found');
+
+      throw new HttpException('User deleted successfully', HttpStatus.OK);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -130,6 +149,27 @@ export class UserService {
 
       await this.userRepository.update(userId, updatedFields);
 
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async setAvatar(file: Express.Multer.File, data: { userId: string }): Promise<string> {
+    const { userId } = data;
+
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const avatarUrl = await this.cloudinaryService.upload(file);
+      if (!avatarUrl) {
+        throw new BadRequestException('Error uploading the file to the server. Try again');
+      }
+
+      await this.userRepository.update(userId, { avatarUrl });
       throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;

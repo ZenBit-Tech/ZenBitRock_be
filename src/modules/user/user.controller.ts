@@ -2,24 +2,33 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Patch,
   UsePipes,
   ValidationPipe,
   UseGuards,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { UserAuthResponse } from 'src/common/types';
+
 import { User } from 'src/common/entities/user.entity';
+import { UserAuthResponse } from 'src/common/types';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 
 @Controller('user')
-@ApiBearerAuth()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   @ApiOperation({
@@ -42,8 +51,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async getAllUsers(): Promise<User[]> {
     try {
-      const data = await this.userService.getAll();
-      return data;
+      return await this.userService.getAll();
     } catch (error) {
       throw error;
     }
@@ -57,14 +65,29 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async getUserByUd(@Body() body: { id: string }): Promise<User> {
     try {
-      const user = await this.userService.findOneById(body.id);
-      return user;
+      return await this.userService.findOneById(body.id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete user by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async deleteUserByUd(@Query('id') id: string): Promise<void> {
+    try {
+      return await this.userService.delete(id);
     } catch (error) {
       throw error;
     }
   }
 
   @Patch('/update')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Updating user data' })
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -72,6 +95,21 @@ export class UserController {
   async updateUser(@Body() userData: UpdateUserDto): Promise<void> {
     try {
       await this.userService.updateUserData(userData);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('set-avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile(new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 5000000 }),
+    ],
+  })) file: Express.Multer.File, @Body() data: { userId: string }): Promise<string> {
+    try {
+      const imageUrl = await this.userService.setAvatar(file, data);
+      return imageUrl;
     } catch (error) {
       throw error;
     }
