@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -10,6 +12,7 @@ import { ConfigService } from './common/configs/config.service';
 import { typeOrmAsyncConfig } from './common/configs/database/typeorm-config';
 import { QobrixProxyMiddleware } from './middleware/qobrix.middleware';
 import { AuthModule } from './modules/auth/auth.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { EmailModule } from './modules/email/email.module';
 import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
@@ -22,6 +25,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     UserModule,
     EmailModule,
     VerificationModule,
+    CloudinaryModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -36,9 +40,16 @@ import { VerificationModule } from './modules/verification/verification.module';
         },
       }),
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 3,
+    }]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_GUARD,
+    useClass: ThrottlerGuard,
+  }],
 })
 export class AppModule implements NestModule {
   // eslint-disable-next-line class-methods-use-this
