@@ -16,7 +16,6 @@ export class UpdateUserDto {
   city?: string;
 
   @ApiProperty({ example: 'United States', description: 'User country' })
-  @IsOptional()
   @IsNotEmpty()
   @IsString()
   country?: string;
