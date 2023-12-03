@@ -9,7 +9,12 @@ import {
   ValidationPipe,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
@@ -22,7 +27,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
-@ApiBearerAuth()
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
@@ -82,6 +86,8 @@ export class UserController {
   }
 
   @Patch('/update')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Updating user data' })
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -93,4 +99,20 @@ export class UserController {
       throw error;
     }
   }
+
+  @Patch('set-avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile(new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 5000000 }),
+    ],
+  })) file: Express.Multer.File, @Body() data: { userId: string }): Promise<string> {
+    try {
+      const imageUrl = await this.userService.setAvatar(file, data);
+      return imageUrl;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
+

@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ConfigModule } from 'common/configs/config.module';
+import { ConfigService } from 'common/configs/config.service';
+import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { User } from 'src/common/entities/user.entity';
 
 import { UserController } from './user.controller';
@@ -21,7 +23,7 @@ import { UserService } from './user.service';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, CloudinaryService, ConfigService],
   exports: [UserService],
 })
-export class UserModule {}
+export class UserModule { }
