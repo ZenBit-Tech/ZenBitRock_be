@@ -13,7 +13,7 @@ export class UpdateUserDto {
   @IsString()
   city?: string;
 
-  @ApiProperty({ example: 'United States', description: 'User country' })
+  @ApiProperty({ example: 'US', description: 'User country' })
   @IsNotEmpty()
   @IsString()
   country?: string;
@@ -36,5 +36,5 @@ export class UpdateUserDto {
   @ApiProperty({ example: 'Blagovist', description: 'Agency name' })
   @IsNotEmpty()
   @IsString()
-  agency?: string;
+  agencyName?: string;
 }
