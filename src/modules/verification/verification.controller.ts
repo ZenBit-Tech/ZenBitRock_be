@@ -25,7 +25,7 @@ export class VerificationController {
   ) file: Express.Multer.File, @Body() verificationData: CreateVerificationDto): Promise<void> {
     try {
       await this.verificationService.updateUserVerificationData(
-        file.originalname, file.buffer, verificationData);
+        file, verificationData);
     } catch (error) {
       throw error;
     }
