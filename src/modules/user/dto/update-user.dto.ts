@@ -40,7 +40,6 @@ export class UpdateUserDto {
 
   @ApiProperty({ example: 'Blagovist', description: 'Agency name' })
   @IsOptional()
-  @IsNotEmpty()
   @IsString()
   agencyName?: string;
 
