@@ -38,6 +38,12 @@ export class ConfigDto {
   QOBRIX_BASE_URL: string;
 
   @IsString()
+  QOBRIX_API_KEY: string;
+
+  @IsString()
+  QOBRIX_API_USER: string;
+
+  @IsString()
   CLOUDINARY_CLOUD_NAME: string;
 
   @IsString()
