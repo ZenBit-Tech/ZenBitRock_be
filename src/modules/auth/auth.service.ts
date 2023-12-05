@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import * as argon2 from 'argon2';
 import { UpdateResult } from 'typeorm';
-import { UserAuthResponse } from 'src/common/types';
+import { UserAuthResponse, UserProfileResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { UserService } from '../user/user.service';
@@ -58,7 +58,10 @@ export class AuthService {
     }
   }
 
-  async confirmEmail(email: string, code: string): Promise<UpdateResult> {
+  async confirmEmail(
+    email: string,
+    code: string,
+  ): Promise<UserProfileResponse> {
     const user: User = await this.userService.findByEmail(email);
 
     if (!user) throw new BadRequestException("User doesn't exist!");
@@ -68,7 +71,9 @@ export class AuthService {
 
     if (user.isVerified) throw new ConflictException('Email already activated');
 
-    return await this.userService.updateById(user.id, { isVerified: true });
+    await this.userService.updateById(user.id, { isVerified: true });
+
+    return this.userService.findByEmail(email);
   }
 
   async resetPassword(
