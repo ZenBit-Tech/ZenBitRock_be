@@ -14,6 +14,9 @@ export class QobrixProxyMiddleware implements NestMiddleware {
     private config: ConfigService,
   ) {
     const targetUrl = this.config.get('QOBRIX_BASE_URL');
+    const apiKey = this.config.get('QOBRIX_API_KEY');
+    const apiUser = this.config.get('QOBRIX_API_USER');
+
     this.qobrixProxy = createProxyMiddleware({
       target: targetUrl,
       changeOrigin: true,
@@ -21,6 +24,10 @@ export class QobrixProxyMiddleware implements NestMiddleware {
         '^/qobrix-proxy': '',
       },
       secure: false,
+      onProxyReq: (proxyReq) => {
+        proxyReq.setHeader('X-Api-Key', apiKey);
+        proxyReq.setHeader('X-Api-User', apiUser);
+      },
     });
 
     this.use = this.use.bind(this);
