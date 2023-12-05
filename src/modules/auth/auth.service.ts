@@ -73,7 +73,7 @@ export class AuthService {
 
     await this.userService.updateById(user.id, { isVerified: true });
 
-    return this.userService.findByEmail(email);
+    return await this.userService.findByEmail(email);
   }
 
   async resetPassword(
