@@ -62,7 +62,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async confirmEmail(
     @Body() confirmEmailDto: ConfirmEmailDto,
-  ): Promise<UpdateResult> {
+  ): Promise<UserProfileResponse> {
     try {
       const { code, email } = confirmEmailDto;
       return this.authService.confirmEmail(email, code);
