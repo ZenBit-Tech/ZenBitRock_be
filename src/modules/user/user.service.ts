@@ -50,13 +50,7 @@ export class UserService {
         token,
       };
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      } else {
-        throw new InternalServerErrorException(
-          `Error creating user: ${error.message}`,
-        );
-      }
+      throw error;
     }
   }
 
