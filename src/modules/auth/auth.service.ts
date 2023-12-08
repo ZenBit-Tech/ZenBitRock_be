@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import * as argon2 from 'argon2';
 import { UpdateResult } from 'typeorm';
-import { UserAuthResponse, UserProfileResponse } from 'src/common/types';
+import { UserProfileResponse, UserSignInResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { UserService } from '../user/user.service';
@@ -42,13 +42,23 @@ export class AuthService {
     }
   }
 
-  async login(user: User): Promise<UserAuthResponse> {
+  async login(user: User): Promise<UserSignInResponse> {
     try {
       return {
         user: {
           email: user.email,
           id: user.id,
           isVerified: user.isVerified,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          city: user.city,
+          country: user.country,
+          phone: user.phone,
+          qobrixContactId: user.qobrixContactId,
+          agencyName: user.agencyName,
+          description: user.description,
+          avatarUrl: user.avatarUrl,
         },
 
         token: this.jwtService.sign({ id: user.id, email: user.email }),
