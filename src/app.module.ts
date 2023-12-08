@@ -42,7 +42,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
-      limit: 3,
+      limit: 7,
     }]),
   ],
   controllers: [AppController],
