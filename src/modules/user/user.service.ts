@@ -175,4 +175,23 @@ export class UserService {
       throw error;
     }
   }
+
+  async deleteUserAvatar(data: { userId: string }): Promise<void> {
+    const { userId } = data;
+
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const avatarUrl = null;
+      await this.userRepository.update(userId, { avatarUrl });
+
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

@@ -100,7 +100,12 @@ export class UserController {
     }
   }
 
-  @Patch('set-avatar')
+  @Patch('/set-avatar')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Setting user avatar' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile(new ParseFilePipe({
     validators: [
@@ -110,6 +115,21 @@ export class UserController {
     try {
       const imageUrl = await this.userService.setAvatar(file, data);
       return imageUrl;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('/delete-avatar')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Deleting user avatar' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @UsePipes(new ValidationPipe())
+  async deleteAvatar(@Body() data: { userId: string }): Promise<void> {
+    try {
+      await this.userService.deleteUserAvatar(data);
     } catch (error) {
       throw error;
     }
