@@ -32,12 +32,13 @@ export class VerificationService {
         throw new NotFoundException('User not found');
       }
 
-      const fileUrl = await this.cloudinaryService.upload(file);
-      if (!fileUrl) {
-        throw new BadRequestException('Error uploading the file to the server. Try again');
+      const upoadedFileData = await this.cloudinaryService.upload(file);
+      if (!upoadedFileData) {
+        throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const updatedUser = { ...verificationData, fileUrl };
+      const { fileUrl: userDocumentUrl, filePublicId: userDocumentPublicId } = upoadedFileData;
+      const updatedUser = { ...verificationData, userDocumentUrl, userDocumentPublicId };
 
       await this.userRepository.update(userId, updatedUser);
       throw new HttpException('Updated', HttpStatus.ACCEPTED);

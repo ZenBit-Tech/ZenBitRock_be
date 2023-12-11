@@ -13,6 +13,7 @@ type UserInfoResponse = {
   agencyName: string;
   description: string;
   avatarUrl: string;
+  avatarPublicId: string;
 };
 
 export { type UserInfoResponse };

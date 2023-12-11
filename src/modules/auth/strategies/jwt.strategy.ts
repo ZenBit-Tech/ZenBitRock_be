@@ -39,6 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         agencyName: userDetails.agencyName,
         description: userDetails.description,
         avatarUrl: userDetails.avatarUrl,
+        avatarPublicId: userDetails.avatarPublicId,
       };
     } catch (error) {
       throw new UnauthorizedException('JWT validation failed');

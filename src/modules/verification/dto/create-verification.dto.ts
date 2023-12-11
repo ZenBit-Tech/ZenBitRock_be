@@ -76,5 +76,4 @@ export class CreateVerificationDto {
   @IsNotEmpty()
   @IsString()
   userId: string;
-
 }
