@@ -155,9 +155,7 @@ export class UserService {
     }
   }
 
-  async setAvatar(file: Express.Multer.File, data: { userId: string }): Promise<string> {
-    const { userId } = data;
-
+  async setAvatar(file: Express.Multer.File, userId: string): Promise<string> {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
@@ -176,9 +174,7 @@ export class UserService {
     }
   }
 
-  async deleteUserAvatar(data: { userId: string }): Promise<void> {
-    const { userId } = data;
-
+  async deleteUserAvatar(userId: string): Promise<void> {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
 

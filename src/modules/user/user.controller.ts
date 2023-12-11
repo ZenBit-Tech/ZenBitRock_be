@@ -113,7 +113,7 @@ export class UserController {
     ],
   })) file: Express.Multer.File, @Body() data: { userId: string }): Promise<string> {
     try {
-      const imageUrl = await this.userService.setAvatar(file, data);
+      const imageUrl = await this.userService.setAvatar(file, data.userId);
       return imageUrl;
     } catch (error) {
       throw error;
@@ -129,7 +129,7 @@ export class UserController {
   @UsePipes(new ValidationPipe())
   async deleteAvatar(@Body() data: { userId: string }): Promise<void> {
     try {
-      await this.userService.deleteUserAvatar(data);
+      await this.userService.deleteUserAvatar(data.userId);
     } catch (error) {
       throw error;
     }
