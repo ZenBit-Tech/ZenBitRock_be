@@ -67,6 +67,9 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'qobrixContactId', default: null })
   qobrixContactId: string;
 
+  @Column({ type: 'varchar', name: 'qobrixAgentId', default: null })
+  qobrixAgentId: string;
+
   @Column({ type: 'varchar', name: 'agencyName', default: null })
   agencyName: string;
 
