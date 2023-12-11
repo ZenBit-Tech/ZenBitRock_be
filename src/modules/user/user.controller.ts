@@ -100,7 +100,12 @@ export class UserController {
     }
   }
 
-  @Patch('set-avatar')
+  @Patch('/set-avatar')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Setting user avatar' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile(
@@ -109,10 +114,10 @@ export class UserController {
       }),
     )
     file: Express.Multer.File,
-    @Body() userId: string,
+    @Body() data: { userId: string },
   ): Promise<string> {
     try {
-      const imageUrl = await this.userService.setAvatar(file, userId);
+      const imageUrl = await this.userService.setAvatar(file, data.userId);
       return imageUrl;
     } catch (error) {
       throw error;

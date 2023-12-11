@@ -157,7 +157,6 @@ export class UserService {
   }
 
   async setAvatar(file: Express.Multer.File, userId: string): Promise<string> {
-
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
