@@ -79,6 +79,6 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'agencyName', default: null })
   agencyName: string;
 
-  @Column({ type: 'varchar', name: 'description', default: null })
+  @Column({ type: 'text', name: 'description', default: null })
   description: string;
 }
