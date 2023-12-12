@@ -23,6 +23,8 @@ import { UserAuthResponse } from 'src/common/types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { DeleteAvatarDto } from './dto/delete-avatar.dto';
+import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
@@ -107,18 +109,28 @@ export class UserController {
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 5000000 })],
-      }),
-    )
-    file: Express.Multer.File,
-    @Body() data: { userId: string },
-  ): Promise<string> {
+  async uploadFile(@UploadedFile(new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 5000000 }),
+    ],
+  })) file: Express.Multer.File, @Body() data: SetAvatarDto): Promise<void> {
     try {
-      const imageUrl = await this.userService.setAvatar(file, data.userId);
-      return imageUrl;
+      await this.userService.setAvatar(file, data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('/delete-avatar')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Deleting user avatar' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @UsePipes(new ValidationPipe())
+  async deleteAvatar(@Body() data: DeleteAvatarDto): Promise<void> {
+    try {
+      await this.userService.deleteUserAvatar(data);
     } catch (error) {
       throw error;
     }

@@ -3,7 +3,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +16,8 @@ import { User } from 'src/common/entities/user.entity';
 import { UserAuthResponse } from 'src/common/types';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { DeleteAvatarDto } from './dto/delete-avatar.dto';
+import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
@@ -36,7 +37,7 @@ export class UserService {
       });
 
       if (existUser) {
-        throw new BadRequestException('User with this email already exists');
+        throw new BadRequestException('This email already exists');
       }
 
       const user = await this.userRepository.save({
@@ -50,7 +51,7 @@ export class UserService {
         token,
       };
     } catch (error) {
-      throw error;
+      throw new Error(`Error creating user: ${error.message}`);
     }
   }
 
@@ -156,21 +157,44 @@ export class UserService {
     }
   }
 
-  async setAvatar(file: Express.Multer.File, userId: string): Promise<string> {
+  async setAvatar(file: Express.Multer.File, data: SetAvatarDto): Promise<void> {
+    const { userId, avatarPublicId: oldAvatarPublicId } = data;
+
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      const avatarUrl = await this.cloudinaryService.upload(file);
-      if (!avatarUrl) {
-        throw new BadRequestException(
-          'Error uploading the file to the server. Try again',
-        );
+      if (oldAvatarPublicId) await this.cloudinaryService.deleteImage(oldAvatarPublicId);
+
+      const upoadedAvatarData = await this.cloudinaryService.upload(file);
+      if (!upoadedAvatarData) {
+        throw new BadRequestException('Error uploading the file to the server');
       }
 
-      await this.userRepository.update(userId, { avatarUrl });
+      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } = upoadedAvatarData;
+      await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteUserAvatar(data: DeleteAvatarDto): Promise<void> {
+    const { userId, avatarPublicId: avatarId } = data;
+
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+
+      if (!user) throw new NotFoundException('User not found');
+
+      await this.cloudinaryService.deleteImage(avatarId);
+
+      const avatarUrl = null;
+      const avatarPublicId = null;
+      await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
+
       throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;

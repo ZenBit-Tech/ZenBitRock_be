@@ -56,9 +56,11 @@ export class AuthService {
           country: user.country,
           phone: user.phone,
           qobrixContactId: user.qobrixContactId,
+          qobrixAgentId: user.qobrixAgentId,
           agencyName: user.agencyName,
           description: user.description,
           avatarUrl: user.avatarUrl,
+          avatarPublicId: user.avatarPublicId,
         },
 
         token: this.jwtService.sign({ id: user.id, email: user.email }),
