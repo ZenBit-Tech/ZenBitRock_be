@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -24,7 +25,7 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
@@ -35,7 +36,7 @@ export class UserService {
       });
 
       if (existUser) {
-        throw new BadRequestException('This email already exists');
+        throw new BadRequestException('User with this email already exists');
       }
 
       const user = await this.userRepository.save({
@@ -49,7 +50,7 @@ export class UserService {
         token,
       };
     } catch (error) {
-      throw new Error(`Error creating user: ${error.message}`);
+      throw error;
     }
   }
 
@@ -155,9 +156,7 @@ export class UserService {
     }
   }
 
-  async setAvatar(file: Express.Multer.File, data: { userId: string }): Promise<string> {
-    const { userId } = data;
-
+  async setAvatar(file: Express.Multer.File, userId: string): Promise<string> {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
@@ -166,7 +165,9 @@ export class UserService {
 
       const avatarUrl = await this.cloudinaryService.upload(file);
       if (!avatarUrl) {
-        throw new BadRequestException('Error uploading the file to the server. Try again');
+        throw new BadRequestException(
+          'Error uploading the file to the server. Try again',
+        );
       }
 
       await this.userRepository.update(userId, { avatarUrl });

@@ -28,7 +28,7 @@ import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Post()
   @ApiOperation({
@@ -100,15 +100,24 @@ export class UserController {
     }
   }
 
-  @Patch('set-avatar')
+  @Patch('/set-avatar')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Setting user avatar' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile(new ParseFilePipe({
-    validators: [
-      new MaxFileSizeValidator({ maxSize: 5000000 }),
-    ],
-  })) file: Express.Multer.File, @Body() data: { userId: string }): Promise<string> {
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5000000 })],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() data: { userId: string },
+  ): Promise<string> {
     try {
-      const imageUrl = await this.userService.setAvatar(file, data);
+      const imageUrl = await this.userService.setAvatar(file, data.userId);
       return imageUrl;
     } catch (error) {
       throw error;
