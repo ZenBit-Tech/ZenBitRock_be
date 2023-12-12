@@ -15,7 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { UserAuthResponse, UserProfileResponse } from 'src/common/types';
+import { UserProfileResponse, UserSignInResponse } from 'src/common/types';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
@@ -36,7 +36,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Endpoint to sign in user with email and password' })
   @ApiBody({ type: AuthDto })
   @UseGuards(LocalAuthGuard)
-  login(@Request() req): Promise<UserAuthResponse> {
+  login(@Request() req): Promise<UserSignInResponse> {
     return this.authService.login(req.user);
   }
 
