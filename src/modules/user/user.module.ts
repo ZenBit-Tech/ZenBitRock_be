@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HttpModule } from '@nestjs/axios';
 
 import { ConfigModule } from 'common/configs/config.module';
 import { ConfigService } from 'common/configs/config.service';
@@ -9,6 +10,7 @@ import { User } from 'src/common/entities/user.entity';
 
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { HTTPService } from '../http/http.service';
 
 @Module({
   imports: [
@@ -21,9 +23,10 @@ import { UserService } from './user.service';
       }),
       inject: [ConfigService],
     }),
+    HttpModule,
   ],
   controllers: [UserController],
-  providers: [UserService, CloudinaryService, ConfigService],
+  providers: [UserService, CloudinaryService, ConfigService, HTTPService],
   exports: [UserService],
 })
-export class UserModule { }
+export class UserModule {}

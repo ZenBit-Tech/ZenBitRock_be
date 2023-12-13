@@ -19,6 +19,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { HTTPService } from '../http/http.service';
 
 @Injectable()
 export class UserService {
@@ -26,7 +27,8 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
-  ) { }
+    private httpService: HTTPService,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
@@ -133,6 +135,30 @@ export class UserService {
       const deletedUser = await this.userRepository.delete({ id });
 
       if (!deletedUser.affected) throw new NotFoundException('Not found');
+
+      throw new HttpException('User deleted successfully', HttpStatus.OK);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteAccount(id: string): Promise<void> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          id,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const { qobrixAgentId, qobrixContactId } = user;
+
+      await this.httpService.deleteAgentFromCRM(qobrixAgentId);
+      await this.httpService.deleteContactFromCRM(qobrixContactId);
+      await this.userRepository.delete({ id });
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {

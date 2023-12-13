@@ -81,7 +81,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async deleteUserByUd(@Query('id') id: string): Promise<void> {
     try {
-      return await this.userService.delete(id);
+      return await this.userService.deleteAccount(id);
     } catch (error) {
       throw error;
     }

@@ -51,4 +51,7 @@ export class ConfigDto {
 
   @IsString()
   CLOUDINARY_API_SECRET: string;
+
+  @IsString()
+  QOBRIX_PROXY_URL: string;
 }
