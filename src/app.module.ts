@@ -16,6 +16,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { EmailModule } from './modules/email/email.module';
 import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
+import { LeadModule } from './modules/lead/lead.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     EmailModule,
     VerificationModule,
     CloudinaryModule,
+    LeadModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -40,16 +42,21 @@ import { VerificationModule } from './modules/verification/verification.module';
         },
       }),
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 7,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 7,
+      },
+    ]),
   ],
   controllers: [AppController],
-  providers: [AppService, {
-    provide: APP_GUARD,
-    useClass: ThrottlerGuard,
-  }],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   // eslint-disable-next-line class-methods-use-this
