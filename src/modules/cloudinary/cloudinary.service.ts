@@ -23,7 +23,9 @@ export class CloudinaryService {
         { folder: 'ZenBitRock' },
         (error, result) => {
           if (error) {
-            reject(new BadRequestException('Failed to upload file to Cloudinary'));
+            reject(
+              new BadRequestException('Failed to upload file to Cloudinary'),
+            );
           } else {
             const { secure_url: fileUrl, public_id: filePublicId } = result;
             resolve({ fileUrl, filePublicId });
@@ -39,7 +41,9 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       cloudinary.v2.uploader.destroy(publicId, (error, { result }) => {
         if (error) {
-          reject(new BadRequestException('Failed to delete file from Cloudinary'));
+          reject(
+            new BadRequestException('Failed to delete file from Cloudinary'),
+          );
         } else {
           resolve({ result });
         }

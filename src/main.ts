@@ -25,7 +25,9 @@ async function bootstrap(): Promise<void> {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
 
-    const qobrixProxyMiddleware = new QobrixProxyMiddleware(new ConfigService());
+    const qobrixProxyMiddleware = new QobrixProxyMiddleware(
+      new ConfigService(),
+    );
 
     app.setGlobalPrefix('/api/v1');
     app.useGlobalPipes(pipe);

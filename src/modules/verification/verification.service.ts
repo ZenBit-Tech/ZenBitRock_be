@@ -20,7 +20,7 @@ export class VerificationService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly cloudinaryService: CloudinaryService,
-  ) { }
+  ) {}
 
   async updateUserVerificationData(
     file: Express.Multer.File,
@@ -37,8 +37,13 @@ export class VerificationService {
         throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const { fileUrl: userDocumentUrl, filePublicId: userDocumentPublicId } = upoadedFileData;
-      const updatedUser = { ...verificationData, userDocumentUrl, userDocumentPublicId };
+      const { fileUrl: userDocumentUrl, filePublicId: userDocumentPublicId } =
+        upoadedFileData;
+      const updatedUser = {
+        ...verificationData,
+        userDocumentUrl,
+        userDocumentPublicId,
+      };
 
       await this.userRepository.update(userId, updatedUser);
       throw new HttpException('Updated', HttpStatus.ACCEPTED);

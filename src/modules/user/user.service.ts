@@ -183,7 +183,10 @@ export class UserService {
     }
   }
 
-  async setAvatar(file: Express.Multer.File, data: SetAvatarDto): Promise<void> {
+  async setAvatar(
+    file: Express.Multer.File,
+    data: SetAvatarDto,
+  ): Promise<void> {
     const { userId, avatarPublicId: oldAvatarPublicId } = data;
 
     try {
@@ -192,14 +195,16 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      if (oldAvatarPublicId) await this.cloudinaryService.deleteImage(oldAvatarPublicId);
+      if (oldAvatarPublicId)
+        await this.cloudinaryService.deleteImage(oldAvatarPublicId);
 
       const upoadedAvatarData = await this.cloudinaryService.upload(file);
       if (!upoadedAvatarData) {
         throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } = upoadedAvatarData;
+      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } =
+        upoadedAvatarData;
       await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
       throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
