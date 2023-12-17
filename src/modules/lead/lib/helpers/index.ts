@@ -1,1 +1,0 @@
-export { getPropertySearchFilter } from './getPropertySearchFilter';
