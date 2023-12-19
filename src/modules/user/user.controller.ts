@@ -18,7 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
-import { UserAuthResponse } from 'src/common/types';
+import { UserAuthResponse, UserSetAvatarResponse } from 'src/common/types';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -117,9 +117,9 @@ export class UserController {
     )
     file: Express.Multer.File,
     @Body() data: SetAvatarDto,
-  ): Promise<void> {
+  ): Promise<UserSetAvatarResponse> {
     try {
-      await this.userService.setAvatar(file, data);
+      return await this.userService.setAvatar(file, data);
     } catch (error) {
       throw error;
     }
