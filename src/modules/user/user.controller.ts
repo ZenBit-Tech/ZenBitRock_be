@@ -18,7 +18,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
-import { UserAuthResponse } from 'src/common/types';
+import {
+  UserAuthResponse,
+  UserInfoResponse,
+  UserSetAvatarResponse,
+} from 'src/common/types';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -94,9 +98,9 @@ export class UserController {
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @UsePipes(new ValidationPipe())
-  async updateUser(@Body() userData: UpdateUserDto): Promise<void> {
+  async updateUser(@Body() userData: UpdateUserDto): Promise<UserInfoResponse> {
     try {
-      await this.userService.updateUserData(userData);
+      return await this.userService.updateUserData(userData);
     } catch (error) {
       throw error;
     }
@@ -117,9 +121,9 @@ export class UserController {
     )
     file: Express.Multer.File,
     @Body() data: SetAvatarDto,
-  ): Promise<void> {
+  ): Promise<UserSetAvatarResponse> {
     try {
-      await this.userService.setAvatar(file, data);
+      return await this.userService.setAvatar(file, data);
     } catch (error) {
       throw error;
     }
