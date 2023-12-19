@@ -1,4 +1,3 @@
-import { Property } from '../property/property-type';
 import { Contact } from './contact.type';
 import { Lead } from './lead.type';
 import { WorkflowStage } from './workflow-stage.type';
@@ -8,7 +7,6 @@ type LeadDetailsResponse = {
     contact_name_contact: Contact;
     conversion_status_workflow_stage: WorkflowStage;
   };
-  matchingProperties: Property[];
 };
 
 export { LeadDetailsResponse };

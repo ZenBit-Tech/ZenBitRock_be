@@ -1,4 +1,14 @@
-import { Controller, Body, UsePipes, ValidationPipe, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  UsePipes,
+  ValidationPipe,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  Patch,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -8,7 +18,7 @@ import { VerificationService } from './verification.service';
 @ApiTags('User`s verification data')
 @Controller('/verification')
 export class VerificationController {
-  constructor(private readonly verificationService: VerificationService) { }
+  constructor(private readonly verificationService: VerificationService) {}
 
   @Patch('/update')
   @ApiOperation({ summary: 'Updating user verification data' })
@@ -16,16 +26,20 @@ export class VerificationController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @UsePipes(new ValidationPipe())
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile(
-    new ParseFilePipe({
-      validators: [
-        new MaxFileSizeValidator({ maxSize: 5000000 }),
-      ],
-    }),
-  ) file: Express.Multer.File, @Body() verificationData: CreateVerificationDto): Promise<void> {
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5000000 })],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() verificationData: CreateVerificationDto,
+  ): Promise<void> {
     try {
       await this.verificationService.updateUserVerificationData(
-        file, verificationData);
+        file,
+        verificationData,
+      );
     } catch (error) {
       throw error;
     }

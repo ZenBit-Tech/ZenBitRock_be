@@ -9,10 +9,8 @@ import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    ConfigModule],
+  imports: [TypeOrmModule.forFeature([User]), ConfigModule],
   controllers: [VerificationController],
   providers: [VerificationService, CloudinaryService],
 })
-export class VerificationModule { }
+export class VerificationModule {}

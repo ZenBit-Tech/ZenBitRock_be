@@ -109,11 +109,15 @@ export class UserController {
   @ApiResponse({ status: 202, description: 'Updated' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile(new ParseFilePipe({
-    validators: [
-      new MaxFileSizeValidator({ maxSize: 5000000 }),
-    ],
-  })) file: Express.Multer.File, @Body() data: SetAvatarDto): Promise<void> {
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5000000 })],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() data: SetAvatarDto,
+  ): Promise<void> {
     try {
       await this.userService.setAvatar(file, data);
     } catch (error) {

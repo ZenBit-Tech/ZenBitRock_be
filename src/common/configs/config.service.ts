@@ -31,8 +31,15 @@ export class ConfigService {
     });
 
     if (validationResult && validationResult.length > 0) {
-      this.logger.error('Configurations invalid', `Validation errors:\n${ConfigService.extractValidationErrorMessages(validationResult)}`);
-      throw new Error(`Configurations invalid \n${validationResult.toString()}`);
+      this.logger.error(
+        'Configurations invalid',
+        `Validation errors:\n${ConfigService.extractValidationErrorMessages(
+          validationResult,
+        )}`,
+      );
+      throw new Error(
+        `Configurations invalid \n${validationResult.toString()}`,
+      );
     }
 
     this.configuration = configuration;
@@ -47,7 +54,9 @@ export class ConfigService {
     return configuration;
   }
 
-  public static extractValidationErrorMessages(validationErrors: ValidationError[]): string {
+  public static extractValidationErrorMessages(
+    validationErrors: ValidationError[],
+  ): string {
     return validationErrors
       .map(
         (validationError) =>
