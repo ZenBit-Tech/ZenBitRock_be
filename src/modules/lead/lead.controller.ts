@@ -10,12 +10,12 @@ import { LeadService } from './lead.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('lead')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 export class LeadController {
   constructor(private readonly leadService: LeadService) {}
 
   @Get('details/:id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Getting lead details by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -27,8 +27,6 @@ export class LeadController {
     }
   }
   @Get('properties')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Getting matching properties' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
