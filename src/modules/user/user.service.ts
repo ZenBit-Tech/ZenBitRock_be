@@ -13,7 +13,11 @@ import { Repository, UpdateResult } from 'typeorm';
 
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { User } from 'src/common/entities/user.entity';
-import { UserAuthResponse, UserSetAvatarResponse } from 'src/common/types';
+import {
+  UserAuthResponse,
+  UserInfoResponse,
+  UserSetAvatarResponse,
+} from 'src/common/types';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
@@ -166,7 +170,7 @@ export class UserService {
     }
   }
 
-  async updateUserData(userData: UpdateUserDto): Promise<void> {
+  async updateUserData(userData: UpdateUserDto): Promise<UserInfoResponse> {
     try {
       const { userId, ...updatedFields } = userData;
       const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -177,7 +181,7 @@ export class UserService {
 
       await this.userRepository.update(userId, updatedFields);
 
-      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+      return await this.userRepository.findOne({ where: { id: userId } });
     } catch (error) {
       throw error;
     }
