@@ -15,17 +15,19 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+
+import { UpdateResult } from 'typeorm';
+
 import { UserProfileResponse, UserSignInResponse } from 'src/common/types';
-import { CreateUserDto } from '../user/dto/create-user.dto';
+
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { RestorePasswordDto } from './dto/restore-password.dto';
+import { VerifyPasswordDto } from './dto/verify-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { ConfirmEmailDto } from './dto/confirm-email.dto';
-import { UpdateResult } from 'typeorm';
-import { RestorePasswordDto } from './dto/restore-password.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { VerifyPasswordDto } from './dto/verify-password.dto';
 
 @Controller('auth')
 @ApiBearerAuth()
@@ -45,8 +47,8 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Successfully retrieved user profile',
-    type: CreateUserDto,
   })
+  @ApiBody({ type: AuthDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<UserProfileResponse> {
@@ -65,7 +67,7 @@ export class AuthController {
   ): Promise<UserProfileResponse> {
     try {
       const { code, email } = confirmEmailDto;
-      return this.authService.confirmEmail(email, code);
+      return await this.authService.confirmEmail(email, code);
     } catch (error) {
       throw new HttpException(
         {
@@ -97,13 +99,14 @@ export class AuthController {
       );
     } catch (error) {
       throw new BadRequestException(
-        'Password restoration failed: ' + error.message,
+        `Password restoration failed: ${error.message}`,
       );
     }
   }
 
   @Post('verify-password')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Verify old password' })
   async verifyOldPassword(
     @Body() verifyPasswordDto: VerifyPasswordDto,
     @Request() req,
