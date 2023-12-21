@@ -5,3 +5,4 @@ export { type UserSignInResponse } from './user-sign-in-response';
 export { type Lead, type LeadDetailsResponse } from './lead';
 export { type MatchingPropertiesResponse } from './property';
 export { type UserSetAvatarResponse } from './user';
+export { type TokenPayload, type SocketWithAuth } from './socket';
