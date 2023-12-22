@@ -17,6 +17,7 @@ import { EmailModule } from './modules/email/email.module';
 import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { LeadModule } from './modules/lead/lead.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { LeadModule } from './modules/lead/lead.module';
     VerificationModule,
     CloudinaryModule,
     LeadModule,
+    EventsModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
