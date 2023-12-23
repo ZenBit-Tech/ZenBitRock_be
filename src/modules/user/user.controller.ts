@@ -15,7 +15,7 @@ import {
   MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
 import { User } from 'src/common/entities/user.entity';
 import {
@@ -44,6 +44,7 @@ export class UserController {
   })
   @ApiResponse({ status: 200, description: 'Successful registration' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiBody({ type: CreateUserDto })
   @UsePipes(new ValidationPipe())
   create(@Body() createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     return this.userService.create(createUserDto);
