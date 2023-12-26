@@ -18,6 +18,8 @@ import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { LeadModule } from './modules/lead/lead.module';
 import { EventsModule } from './modules/events/events.module';
+import { MessageModule } from './modules/message/message.module';
+import { RoomModule } from './modules/room/room.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { EventsModule } from './modules/events/events.module';
     CloudinaryModule,
     LeadModule,
     EventsModule,
+    MessageModule,
+    RoomModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

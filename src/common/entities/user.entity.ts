@@ -1,6 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 import { CoreEntity } from './core.entity';
+import { Message } from './message.entity';
+import { Room } from './room.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -81,4 +83,13 @@ export class User extends CoreEntity {
 
   @Column({ type: 'text', name: 'description', default: null })
   description: string;
+
+  @OneToMany(() => Message, (message) => message.owner)
+  messages: Message[];
+
+  @OneToMany(() => Room, (room) => room.owner)
+  rooms: Room[];
+
+  @ManyToMany(() => Room, (room) => room.members)
+  joinedRooms: Room[];
 }
