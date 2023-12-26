@@ -37,7 +37,7 @@ async function bootstrap(): Promise<void> {
     app.useGlobalPipes(pipe);
     app.enableCors();
     app.use('/qobrix-proxy', qobrixProxyMiddleware.use);
-    console.log('Listening on port', process.env.APP_PORT);
+   
     await app.listen(process.env.APP_PORT);
   } catch (error) {
     throw error;
