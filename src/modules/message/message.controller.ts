@@ -33,7 +33,6 @@ export class MessageController {
     try {
       return await this.messageService.getMessages(getMessagesDto);
     } catch (error) {
-      console.error('Error getting messages:', error.message);
       throw new Error('Failed to get messages');
     }
   }
@@ -58,7 +57,6 @@ export class MessageController {
         req.user.id,
       );
     } catch (error) {
-      console.error('Error creating message:', error.message);
       throw new Error('Failed to create message');
     }
   }

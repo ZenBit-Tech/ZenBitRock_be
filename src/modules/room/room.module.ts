@@ -4,8 +4,6 @@ import { Room } from 'src/common/entities/room.entity';
 import { RoomController } from './room.controller';
 import { RoomService } from './room.service';
 
-
-
 @Module({
   imports: [TypeOrmModule.forFeature([Room])],
   controllers: [RoomController],

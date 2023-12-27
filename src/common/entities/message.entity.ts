@@ -11,8 +11,6 @@ import { CoreEntity } from './core.entity';
 
 @Entity()
 export class Message extends CoreEntity {
- 
-
   @Column()
   content: string;
 
@@ -24,6 +22,4 @@ export class Message extends CoreEntity {
 
   @ManyToOne(() => User, (user) => user.messages)
   owner: User;
-
-  
 }

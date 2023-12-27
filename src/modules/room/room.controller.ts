@@ -28,7 +28,10 @@ export class RoomController {
     description: 'The room has been successfully created',
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  createRoom(@Body() createRoomDto: CreateRoomDto, @Request() req): Promise<{ room: Room }> {
+  createRoom(
+    @Body() createRoomDto: CreateRoomDto,
+    @Request() req,
+  ): Promise<{ room: Room }> {
     return this.roomService.createRoom(createRoomDto, req.user.id);
   }
 }
