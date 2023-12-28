@@ -43,6 +43,7 @@ export class QobrixProxyMiddleware implements NestMiddleware {
       'Access-Control-Allow-Headers',
       'Content-Type, Authorization',
     );
+    res.setHeader('Cache-Control', 'no-cache');
 
     this.qobrixProxy(req, res, next);
   }
