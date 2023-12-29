@@ -23,6 +23,7 @@ async function bootstrap(): Promise<void> {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
+    document.servers = [{ url: '/api/v1' }];
     SwaggerModule.setup('api', app, document);
 
     const qobrixProxyMiddleware = new QobrixProxyMiddleware(
@@ -33,6 +34,7 @@ async function bootstrap(): Promise<void> {
     app.useGlobalPipes(pipe);
     app.enableCors();
     app.use('/qobrix-proxy', qobrixProxyMiddleware.use);
+
     await app.listen(process.env.APP_PORT);
   } catch (error) {
     throw error;
