@@ -1,4 +1,13 @@
-import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Get,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoomService } from './room.service';
 
@@ -17,6 +26,26 @@ import { Room } from 'src/common/entities/room.entity';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
+  @Get('/')
+  @ApiOperation({ summary: 'Getting all rooms' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  getRooms(): Promise<Room[]> {
+    return this.roomService.getRooms();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Getting room by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async getRoom(@Param('id') id: string): Promise<Room> {
+    try {
+      return await this.roomService.getRoom(id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a room', description: 'Create a new room' })
   @ApiBody({
@@ -33,5 +62,13 @@ export class RoomController {
     @Request() req,
   ): Promise<{ room: Room }> {
     return this.roomService.createRoom(createRoomDto, req.user.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  deleteRoom(@Param('id') id: string, @Request() req): Promise<void> {
+    return this.roomService.deleteRoom(id, req.user.id);
   }
 }

@@ -14,8 +14,9 @@ export class MessageService {
 
   async getMessages(getMessagesDto: GetMessagesDto): Promise<Message[]> {
     try {
-      const messages = await this.messageRepository.findBy({
-        room: { id: getMessagesDto.roomId },
+      const messages = await this.messageRepository.find({
+        where: { room: { id: getMessagesDto.roomId } },
+        relations: ['owner'],
       });
 
       return messages;
