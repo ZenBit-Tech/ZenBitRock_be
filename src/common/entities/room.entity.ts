@@ -21,7 +21,7 @@ export class Room extends CoreEntity {
   @ManyToOne(() => User, (user) => user.rooms)
   owner: User;
 
-  @ManyToMany(() => User, (user) => user.joinedRooms)
+  @ManyToMany(() => User, (user) => user.joinedRooms, { eager: true })
   @JoinTable()
   members: User[];
 }

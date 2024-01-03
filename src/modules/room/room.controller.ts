@@ -47,22 +47,23 @@ export class RoomController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a room', description: 'Create a new room' })
-  @ApiBody({
-    type: CreateRoomDto,
-    description: 'Room data to create a new room',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'The room has been successfully created',
-  })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  createRoom(
-    @Body() createRoomDto: CreateRoomDto,
-    @Request() req,
-  ): Promise<{ room: Room }> {
-    return this.roomService.createRoom(createRoomDto, req.user.id);
-  }
+@ApiOperation({ summary: 'Create a room', description: 'Create a new room' })
+@ApiBody({
+  type: CreateRoomDto,
+  description: 'Room data to create a new room',
+})
+@ApiResponse({
+  status: 201,
+  description: 'The room has been successfully created',
+})
+@ApiResponse({ status: 400, description: 'Bad request' })
+createRoom(
+  @Body() createRoomDto: CreateRoomDto,
+  @Request() req,
+): Promise<{ room: Room }> {
+  const memberIds: string[] = createRoomDto.memberIds || [];
+  return this.roomService.createRoom(createRoomDto, req.user.id, memberIds);
+}
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a room' })

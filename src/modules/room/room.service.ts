@@ -42,11 +42,13 @@ export class RoomService {
   async createRoom(
     createRoomDto: CreateRoomDto,
     userId: string,
+    memberIds: string[],
   ): Promise<{ room: Room }> {
     try {
       const room = this.roomRepository.create({
         title: createRoomDto.title,
         owner: { id: userId },
+        members: memberIds.map((memberId) => ({ id: memberId })),
       });
       await this.roomRepository.save(room);
       return { room };
