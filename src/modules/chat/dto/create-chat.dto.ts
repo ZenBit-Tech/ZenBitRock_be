@@ -7,10 +7,10 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateRoomDto {
+export class CreateChatDto {
   @ApiProperty({
     example: '12345678',
-    description: 'Room title field',
+    description: 'Chat title field',
   })
   @IsNotEmpty()
   @MinLength(1)

@@ -2,7 +2,7 @@ import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
-import { Room } from './room.entity';
+import { Chat } from './chat.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -87,9 +87,9 @@ export class User extends CoreEntity {
   @OneToMany(() => Message, (message) => message.owner)
   messages: Message[];
 
-  @OneToMany(() => Room, (room) => room.owner)
-  rooms: Room[];
+  @OneToMany(() => Chat, (chat) => chat.owner)
+  chats: Chat[];
 
-  @ManyToMany(() => Room, (room) => room.members)
-  joinedRooms: Room[];
+  @ManyToMany(() => Chat, (chat) => chat.members)
+  joinedChats: Chat[];
 }

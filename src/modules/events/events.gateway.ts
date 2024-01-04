@@ -4,8 +4,8 @@ import { Server } from 'socket.io';
 import { MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, } from '@nestjs/websockets';
 
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
-import { MessageService } from '../message/message.service';
-import { CreateMessageDto } from '../message/dto/create-message.dto';
+import { CreateMessageDto } from '../chat/dto/create-message.dto';
+import { MessageService } from '../chat/services/message.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit {
@@ -43,19 +43,19 @@ class EventsGateway implements OnGatewayInit {
   }
 
   @SubscribeMessage('join')
-  handleJoin(client: SocketWithAuth, data: { roomId: string }): string {
-    const roomId = data.roomId;
+  handleJoin(client: SocketWithAuth, data: { chatId: string }): string {
+    const chatId = data.chatId;
 
-    client.join(roomId.toString());
-    return roomId;
+    client.join(chatId.toString());
+    return chatId;
   }
 
   @SubscribeMessage('leave')
-  handleLeave(client: SocketWithAuth, data: { roomId: string }): string {
-    const roomId = data.roomId;
+  handleLeave(client: SocketWithAuth, data: { chatId: string }): string {
+    const chatId = data.chatId;
 
-    client.leave(roomId.toString());
-    return roomId;
+    client.leave(chatId.toString());
+    return chatId;
   }
 
   @SubscribeMessage('message')
@@ -72,7 +72,7 @@ class EventsGateway implements OnGatewayInit {
       );
 
       client.emit('message', message);
-      client.to(message.room.toString()).emit('message', message);
+      client.to(message.chat.toString()).emit('message', message);
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }

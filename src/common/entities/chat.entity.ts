@@ -11,17 +11,20 @@ import { User } from './user.entity';
 import { CoreEntity } from './core.entity';
 
 @Entity()
-export class Room extends CoreEntity {
+export class Chat extends CoreEntity {
   @Column()
   title: string;
 
-  @OneToMany(() => Message, (message) => message.room)
+  @Column({ type: 'boolean', name: 'is_private', default: false })
+  isPrivate: boolean;
+
+  @OneToMany(() => Message, (message) => message.chat)
   messages: Message[];
 
-  @ManyToOne(() => User, (user) => user.rooms)
+  @ManyToOne(() => User, (user) => user.chats)
   owner: User;
 
-  @ManyToMany(() => User, (user) => user.joinedRooms, { eager: true })
+  @ManyToMany(() => User, (user) => user.joinedChats, { eager: true })
   @JoinTable()
   members: User[];
 }
