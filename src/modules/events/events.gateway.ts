@@ -49,7 +49,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     });
   }
 
-  async handleConnection(client: SocketWithAuth) {
+  async handleConnection(client: SocketWithAuth): Promise<void> {
     client.join(client.userId);
     const chatList = await this.userService.getChatsByUser(client.userId);
     chatList.forEach((chat) => {
