@@ -61,8 +61,7 @@ export class ChatController {
     @Body() createChatDto: CreateChatDto,
     @Request() req,
   ): Promise<{ chat: Chat }> {
-    const memberIds: string[] = createChatDto.memberIds || [];
-    return this.chatService.createChat(createChatDto, req.user.id, memberIds);
+    return this.chatService.createChat(createChatDto, req.user.id);
   }
 
   @Delete(':id')
@@ -70,7 +69,6 @@ export class ChatController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   deleteChat(@Param('id') id: string, @Request() req): Promise<void> {
-    return this.
-    chatService.deleteChat(id, req.user.id);
+    return this.chatService.deleteChat(id, req.user.id);
   }
 }

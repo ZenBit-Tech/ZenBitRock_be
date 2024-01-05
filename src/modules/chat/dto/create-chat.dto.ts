@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  ArrayMinSize,
-  IsArray,
-  IsNotEmpty,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
 export class CreateChatDto {
   @ApiProperty({
@@ -25,7 +19,12 @@ export class CreateChatDto {
     description: 'Array of user IDs to be added as members',
     required: false,
   })
-  @IsArray()
-  @ArrayMinSize(2)
   memberIds?: string[];
+
+  @ApiProperty({
+    example: 'false',
+    description: 'Boolean is chat Private or no',
+    required: true,
+  })
+  isPrivate: boolean;
 }

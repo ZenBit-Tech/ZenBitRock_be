@@ -42,13 +42,13 @@ export class ChatService {
   async createChat(
     createChatDto: CreateChatDto,
     userId: string,
-    memberIds: string[],
   ): Promise<{ chat: Chat }> {
     try {
       const chat = this.chatRepository.create({
         title: createChatDto.title,
         owner: { id: userId },
-        members: memberIds.map((memberId) => ({ id: memberId })),
+        members: createChatDto.memberIds.map((memberId) => ({ id: memberId })),
+        isPrivate: createChatDto.isPrivate,
       });
       await this.chatRepository.save(chat);
       return { chat };
