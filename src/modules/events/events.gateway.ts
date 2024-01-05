@@ -1,21 +1,19 @@
 import { Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  MessageBody,
-  OnGatewayInit,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-
 import { Server } from 'socket.io';
+import { MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, } from '@nestjs/websockets';
+
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
+import { CreateMessageDto } from '../chat/dto/create-message.dto';
+import { MessageService } from '../chat/services/message.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit {
   private readonly logger = new Logger(EventsGateway.name);
   @Inject()
   private jwtService: JwtService;
+  @Inject()
+  private messageService: MessageService;
 
   @WebSocketServer()
   server: Server;
@@ -42,6 +40,42 @@ class EventsGateway implements OnGatewayInit {
   @SubscribeMessage('ping')
   handleEvent(@MessageBody() data: string): string {
     return data + ' pong';
+  }
+
+  @SubscribeMessage('join')
+  handleJoin(client: SocketWithAuth, data: { chatId: string }): string {
+    const chatId = data.chatId;
+
+    client.join(chatId.toString());
+    return chatId;
+  }
+
+  @SubscribeMessage('leave')
+  handleLeave(client: SocketWithAuth, data: { chatId: string }): string {
+    const chatId = data.chatId;
+
+    client.leave(chatId.toString());
+    return chatId;
+  }
+
+  @SubscribeMessage('message')
+  async handleMessage(
+    client: SocketWithAuth,
+    createMessageDto: CreateMessageDto,
+  ): Promise<void> {
+    try {
+      const userId = client.userId;
+
+      const message = await this.messageService.createMessage(
+        createMessageDto,
+        userId,
+      );
+
+      client.emit('message', message);
+      client.to(message.chat.toString()).emit('message', message);
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
   }
 }
 export { EventsGateway };

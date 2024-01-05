@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Query, Body, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { GetMessagesDto } from './dto/get-messages.dto';
-import { MessageService } from './message.service';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CreateMessageDto } from '../dto/create-message.dto';
+import { GetMessagesDto } from '../dto/get-messages.dto';
+import { MessageService } from '../services/message.service';
 import { Message } from 'src/common/entities/message.entity';
 
 @Controller('messages')

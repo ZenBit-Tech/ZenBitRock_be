@@ -4,10 +4,10 @@ import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 export class CreateMessageDto {
   @ApiProperty({
     example: '3f9694ae-3241-48ef-b16b-32dc7d23e1d9',
-    description: 'Room id',
+    description: 'Chat id',
   })
   @IsNotEmpty()
-  roomId: string;
+  chatId: string;
 
   @ApiProperty({
     example: '12345678',

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from 'src/common/entities/message.entity';
-import { GetMessagesDto } from './dto/get-messages.dto';
-import { CreateMessageDto } from './dto/create-message.dto';
+import { GetMessagesDto } from '../dto/get-messages.dto';
+import { CreateMessageDto } from '../dto/create-message.dto';
 
 @Injectable()
 export class MessageService {
@@ -14,8 +14,9 @@ export class MessageService {
 
   async getMessages(getMessagesDto: GetMessagesDto): Promise<Message[]> {
     try {
-      const messages = await this.messageRepository.findBy({
-        room: { id: getMessagesDto.roomId },
+      const messages = await this.messageRepository.find({
+        where: { chat: { id: getMessagesDto.chatId } },
+        relations: ['owner'],
       });
 
       return messages;
@@ -31,7 +32,7 @@ export class MessageService {
     try {
       const message = this.messageRepository.create({
         ...createMessageDto,
-        room: { id: createMessageDto.roomId },
+        chat: { id: createMessageDto.chatId },
         owner: { id: userId },
       });
 
