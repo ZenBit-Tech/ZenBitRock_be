@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Chat } from 'src/common/entities/chat.entity';
 import { Repository } from 'typeorm';
 import { CreateChatDto } from '../dto/create-chat.dto';
+import { UpdateChatDto } from '../dto/update-chat.dto';
 
 @Injectable()
 export class ChatService {
@@ -33,7 +34,7 @@ export class ChatService {
       const chat = await this.chatRepository.findOneBy({ id });
 
       if (!chat) {
-        throw new NotFoundException(` not found`);
+        throw new NotFoundException(`Chat not found`);
       }
       return chat;
     } catch (error) {}
@@ -64,9 +65,25 @@ export class ChatService {
         owner: { id: userId },
       });
       if (!deleteChat.affected) {
-        throw new NotFoundException(`not found`);
+        throw new NotFoundException(`Chat not found`);
       }
       throw new HttpException('Chat deleted successfully', HttpStatus.OK);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateChatData(id: string, chatData: UpdateChatDto): Promise<Chat> {
+    try {
+      const chat = await this.chatRepository.findOne({ where: { id } });
+
+      if (!chat) {
+        throw new NotFoundException('Chat not found');
+      }
+
+      await this.chatRepository.update(id, chatData);
+
+      return await this.chatRepository.findOne({ where: { id } });
     } catch (error) {
       throw error;
     }

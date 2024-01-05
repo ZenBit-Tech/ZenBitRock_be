@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
-export class CreateChatDto {
+export class UpdateChatDto {
   @ApiProperty({
     example: '12345678',
     description: 'Chat title field',
@@ -21,11 +21,4 @@ export class CreateChatDto {
     required: false,
   })
   memberIds?: string[];
-
-  @ApiProperty({
-    example: 'false',
-    description: 'Boolean is chat Private or no',
-    required: true,
-  })
-  isPrivate: boolean;
 }
