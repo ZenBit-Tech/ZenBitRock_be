@@ -11,6 +11,9 @@ export class Message extends CoreEntity {
   @Column({ type: 'boolean', name: 'is_read', default: false })
   isRead: boolean;
 
+  @Column()
+  chatId: string;
+
   @ManyToOne(() => Chat, (chat) => chat.messages)
   chat: Chat;
 
