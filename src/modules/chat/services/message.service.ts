@@ -38,7 +38,7 @@ export class MessageService {
 
       return await this.messageRepository.findOne({
         where: { id: newMessage.id },
-        relations: ['owner'],
+        relations: ['owner', 'chat'],
       });
     } catch (error) {
       throw new Error('Failed to create message');

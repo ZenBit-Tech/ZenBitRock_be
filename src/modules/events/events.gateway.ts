@@ -91,7 +91,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         userId,
       );
 
-      this.server.to(message.chatId).emit(ChatEvent.NewMessage, message);
+      this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
