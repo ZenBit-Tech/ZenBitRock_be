@@ -5,8 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Chat } from 'src/common/entities/chat.entity';
+
 import { Repository } from 'typeorm';
+
+import { Chat } from 'src/common/entities/chat.entity';
+import { User } from 'src/common/entities/user.entity';
+
 import { CreateChatDto } from '../dto/create-chat.dto';
 import { UpdateChatDto } from '../dto/update-chat.dto';
 
@@ -34,7 +38,7 @@ export class ChatService {
       const chat = await this.chatRepository.findOneBy({ id });
 
       if (!chat) {
-        throw new NotFoundException(`Chat not found`);
+        throw new NotFoundException('Chat not found');
       }
       return chat;
     } catch (error) {}
@@ -48,7 +52,6 @@ export class ChatService {
       const chat = this.chatRepository.create({
         title: createChatDto.title,
         owner: { id: userId },
-        members: createChatDto.memberIds.map((memberId) => ({ id: memberId })),
         isPrivate: createChatDto.isPrivate,
       });
       await this.chatRepository.save(chat);
@@ -65,7 +68,7 @@ export class ChatService {
         owner: { id: userId },
       });
       if (!deleteChat.affected) {
-        throw new NotFoundException(`Chat not found`);
+        throw new NotFoundException('Chat not found');
       }
       throw new HttpException('Chat deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -75,13 +78,19 @@ export class ChatService {
 
   async updateChatData(id: string, chatData: UpdateChatDto): Promise<Chat> {
     try {
-      const chat = await this.chatRepository.findOne({ where: { id } });
+      const chat = await this.chatRepository.findOneOrFail({
+        where: { id },
+        relations: ['members'],
+      });
 
       if (!chat) {
         throw new NotFoundException('Chat not found');
       }
 
-      await this.chatRepository.update(id, chatData);
+      chat.members = chatData.memberIds.map((memberId) => ({
+        id: memberId,
+      })) as User[];
+      await this.chatRepository.save(chat);
 
       return await this.chatRepository.findOne({ where: { id } });
     } catch (error) {
