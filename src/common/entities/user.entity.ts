@@ -3,6 +3,7 @@ import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
 import { Chat } from './chat.entity';
+import { ChatMessageReader } from './chatMessagereader.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -92,4 +93,7 @@ export class User extends CoreEntity {
 
   @ManyToMany(() => Chat, (chat) => chat.members)
   joinedChats: Chat[];
+
+  @OneToMany(() => ChatMessageReader, (reader) => reader.user)
+  readMessages: ChatMessageReader[];
 }
