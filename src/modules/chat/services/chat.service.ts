@@ -64,7 +64,7 @@ export class ChatService {
         owner: { id: userId },
       });
       if (!deleteChat.affected) {
-        throw new NotFoundException(`not found`);
+        throw new NotFoundException('Chat not found');
       }
       throw new HttpException('Chat deleted successfully', HttpStatus.OK);
     } catch (error) {
