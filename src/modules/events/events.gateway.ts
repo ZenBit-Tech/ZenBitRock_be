@@ -88,18 +88,6 @@ class EventsGateway implements OnGatewayInit {
     }
   }
 
-  @SubscribeMessage('getUnreadCount')
-  async getUnreadCount(client: SocketWithAuth): Promise<void> {
-    try {
-      const { userId } = client;
-      const unreadCount = await this.messageService.getUnreadCount(userId);
-
-      client.emit('unreadCount', unreadCount);
-    } catch (error) {
-      client.emit('errorMessage', { message: 'An error occurred' });
-    }
-  }
-
   @SubscribeMessage('getUnreadMessagesByChatId')
   async getUnreadMessagesByChatId(
     client: SocketWithAuth,
@@ -113,6 +101,38 @@ class EventsGateway implements OnGatewayInit {
         await this.messageService.getUnreadMessagesByChatId(userId, chatId);
 
       client.emit('unreadMessagesByChatId', unreadMessages);
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
+  }
+
+  @SubscribeMessage('getUnreadCount')
+  async getUnreadCount(client: SocketWithAuth): Promise<void> {
+    try {
+      const { userId } = client;
+      const unreadCount = await this.messageService.getUnreadCount(userId);
+
+      client.emit('unreadCount', unreadCount);
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
+  }
+
+  @SubscribeMessage('getUnreadCountByChatId')
+  async getUnreadCountByChatId(
+    client: SocketWithAuth,
+    data: { chatId: string },
+  ): Promise<void> {
+    try {
+      const { userId } = client;
+      const { chatId } = data;
+
+      const unreadCount = await this.messageService.getUnreadCountByChatId(
+        userId,
+        chatId,
+      );
+
+      client.emit('unreadCountByChatId', { chatId, unreadCount });
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }

@@ -72,25 +72,6 @@ export class MessageService {
     }
   }
 
-  async getUnreadCount(userId: string): Promise<number> {
-    try {
-      const unreadMessages = await this.messageRepository
-        .createQueryBuilder('message')
-        .innerJoinAndSelect(
-          'message.readers',
-          'reader',
-          'reader.user = :userId',
-          { userId },
-        )
-        .where('message.isRead = false')
-        .getMany();
-
-      return unreadMessages.length;
-    } catch (error) {
-      throw new Error('Failed to fetch unread message count');
-    }
-  }
-
   async getUnreadMessagesByChatId(
     userId: string,
     chatId: string,
@@ -111,6 +92,48 @@ export class MessageService {
       return unreadMessages;
     } catch (error) {
       throw new Error('Failed to fetch unread messages by chat');
+    }
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    try {
+      const unreadMessages = await this.messageRepository
+        .createQueryBuilder('message')
+        .innerJoinAndSelect(
+          'message.readers',
+          'reader',
+          'reader.user = :userId',
+          { userId },
+        )
+        .where('message.isRead = false')
+        .getMany();
+
+      return unreadMessages.length;
+    } catch (error) {
+      throw new Error('Failed to fetch unread message count');
+    }
+  }
+
+  async getUnreadCountByChatId(
+    userId: string,
+    chatId: string,
+  ): Promise<number> {
+    try {
+      const unreadMessages = await this.messageRepository
+        .createQueryBuilder('message')
+        .innerJoinAndSelect(
+          'message.readers',
+          'reader',
+          'reader.user = :userId',
+          { userId },
+        )
+        .where('message.isRead = false')
+        .andWhere('message.chat = :chatId', { chatId })
+        .getMany();
+
+      return unreadMessages.length;
+    } catch (error) {
+      throw new Error('Failed to fetch unread message count by chat');
     }
   }
 
