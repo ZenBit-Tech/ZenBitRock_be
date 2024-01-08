@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CreateChatDto {
   @ApiProperty({
@@ -20,6 +27,9 @@ export class CreateChatDto {
     description: 'Array of user IDs to be added as members',
     required: false,
   })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
   memberIds?: string[];
 
   @ApiProperty({

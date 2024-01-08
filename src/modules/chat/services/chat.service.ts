@@ -54,6 +54,9 @@ export class ChatService {
         owner: { id: userId },
         isPrivate: createChatDto.isPrivate,
       });
+      chat.members = createChatDto.memberIds.map((memberId) => ({
+        id: memberId,
+      })) as User[];
       await this.chatRepository.save(chat);
       return { chat };
     } catch (error) {
