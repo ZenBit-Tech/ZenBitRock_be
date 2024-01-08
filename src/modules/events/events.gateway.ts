@@ -1,17 +1,29 @@
 import { Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server } from 'socket.io';
-import { MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, } from '@nestjs/websockets';
+import {
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
 
+import { ChatEvent } from 'src/common/enums';
+import { Message } from 'src/common/entities/message.entity';
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
 import { CreateMessageDto } from '../chat/dto/create-message.dto';
 import { MessageService } from '../chat/services/message.service';
+import { UserService } from '../user/user.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
-class EventsGateway implements OnGatewayInit {
+class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(EventsGateway.name);
   @Inject()
   private jwtService: JwtService;
+  @Inject()
+  private userService: UserService;
   @Inject()
   private messageService: MessageService;
 
@@ -37,9 +49,17 @@ class EventsGateway implements OnGatewayInit {
     });
   }
 
-  @SubscribeMessage('ping')
-  handleEvent(@MessageBody() data: string): string {
-    return data + ' pong';
+  async handleConnection(client: SocketWithAuth): Promise<void> {
+    client.join(client.userId);
+    const chatList = await this.userService.getChatsByUser(client.userId);
+    chatList.forEach((chat) => {
+      client.join(chat.id);
+    });
+  }
+
+  @SubscribeMessage(ChatEvent.RequestAllMessages)
+  async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
+    return await this.messageService.getMessages(chatId);
   }
 
   @SubscribeMessage('join')
@@ -58,7 +78,7 @@ class EventsGateway implements OnGatewayInit {
     return chatId;
   }
 
-  @SubscribeMessage('message')
+  @SubscribeMessage(ChatEvent.NewMessage)
   async handleMessage(
     client: SocketWithAuth,
     createMessageDto: CreateMessageDto,
@@ -71,8 +91,7 @@ class EventsGateway implements OnGatewayInit {
         userId,
       );
 
-      client.emit('message', message);
-      client.to(message.chat.toString()).emit('message', message);
+      this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
