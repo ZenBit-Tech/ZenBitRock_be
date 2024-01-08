@@ -33,7 +33,7 @@ export class ChatService {
       const chat = await this.chatRepository.findOneBy({ id });
 
       if (!chat) {
-        throw new NotFoundException(` not found`);
+        throw new NotFoundException('Chat not found');
       }
       return chat;
     } catch (error) {}
@@ -49,12 +49,34 @@ export class ChatService {
         title: createChatDto.title,
         owner: { id: userId },
         members: memberIds.map((memberId) => ({ id: memberId })),
+        isPrivate: createChatDto.isPrivate,
       });
       await this.chatRepository.save(chat);
       return { chat };
     } catch (error) {
       throw error;
     }
+  }
+
+  async checkForPrivateChat(
+    currentUserId: string,
+    targetAgentId: string,
+  ): Promise<string | null> {
+    const chats = await this.chatRepository.find({
+      where: {
+        isPrivate: true,
+      },
+      relations: ['members'],
+    });
+
+    const chat = chats.find(
+      (chat) =>
+        chat.members.length === 2 &&
+        chat.members.some((member) => member.id === currentUserId) &&
+        chat.members.some((member) => member.id === targetAgentId),
+    );
+
+    return chat ? chat.id : null;
   }
 
   async deleteChat(id: string, userId: string): Promise<void> {
