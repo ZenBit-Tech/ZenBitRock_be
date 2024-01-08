@@ -46,6 +46,28 @@ export class ChatController {
     }
   }
 
+  @Get('/check-private-chat/:agentId')
+  @ApiOperation({ summary: 'Check for an existing private chat with an agent' })
+  @ApiResponse({
+    status: 200,
+    description: 'Existing chat id returned or null',
+  })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async checkPrivateChat(
+    @Param('agentId') agentId: string,
+    @Request() req,
+  ): Promise<{ chatId: string | null }> {
+    try {
+      const chatId = await this.chatService.checkForPrivateChat(
+        req.user.id,
+        agentId,
+      );
+      return { chatId };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a chat', description: 'Create a new chat' })
   @ApiBody({
@@ -70,7 +92,6 @@ export class ChatController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   deleteChat(@Param('id') id: string, @Request() req): Promise<void> {
-    return this.
-    chatService.deleteChat(id, req.user.id);
+    return this.chatService.deleteChat(id, req.user.id);
   }
 }

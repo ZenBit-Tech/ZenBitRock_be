@@ -26,6 +26,12 @@ export class CreateChatDto {
     required: false,
   })
   @IsArray()
-  @ArrayMinSize(2)
   memberIds?: string[];
+
+  @ApiProperty({
+    example: 'false',
+    description: 'Boolean is chat Private or not',
+    required: true,
+  })
+  isPrivate: boolean;
 }
