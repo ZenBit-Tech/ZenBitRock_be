@@ -237,7 +237,7 @@ export class UserService {
     }
   }
 
-  async getChatsByUser(id: string): Promise<Chat[] | []> {
+  async getChatsByUser(id: string): Promise<Chat[]> {
     try {
       const user = await this.userRepository.findOne({
         where: { id },
