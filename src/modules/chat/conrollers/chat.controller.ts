@@ -2,12 +2,14 @@ import {
   Body,
   Controller,
   Post,
+  Patch,
   UseGuards,
   Request,
   Get,
   Delete,
   Param,
 } from '@nestjs/common';
+
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ChatService } from '../services/chat.service';
 
@@ -19,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateChatDto } from '../dto/create-chat.dto';
 import { Chat } from 'src/common/entities/chat.entity';
+import { UpdateChatDto } from '../dto/update-chat.dto';
 
 @Controller('chats')
 @ApiBearerAuth()
@@ -83,6 +86,7 @@ export class ChatController {
     @Body() createChatDto: CreateChatDto,
     @Request() req,
   ): Promise<{ chat: Chat }> {
+
     const memberIds: string[] = createChatDto.memberIds || [];
     return this.chatService.createChat(
       createChatDto,
@@ -98,5 +102,21 @@ export class ChatController {
   @ApiResponse({ status: 404, description: 'Not found' })
   deleteChat(@Param('id') id: string, @Request() req): Promise<void> {
     return this.chatService.deleteChat(id, req.user.id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Updating chat data' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateChat(
+    @Param('id') id: string,
+    @Body() chatData: UpdateChatDto,
+  ): Promise<Chat> {
+    try {
+      return await this.chatService.updateChatData(id, chatData);
+    } catch (error) {
+      throw error;
+    }
+
   }
 }
