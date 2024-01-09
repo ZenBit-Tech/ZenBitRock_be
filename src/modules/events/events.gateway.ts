@@ -149,7 +149,6 @@ class EventsGateway implements OnGatewayInit {
 
       await this.messageService.markMessageAsRead(messageId, userId, chatId);
 
-      // Emit updated unread count after marking the message as read
       const unreadCount = await this.messageService.getUnreadCount(userId);
       client.emit('unreadCount', unreadCount);
     } catch (error) {
