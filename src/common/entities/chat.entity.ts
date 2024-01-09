@@ -21,7 +21,7 @@ export class Chat extends CoreEntity {
   @OneToMany(() => Message, (message) => message.chat)
   messages: Message[];
 
-  @ManyToOne(() => User, (user) => user.chats)
+  @ManyToOne(() => User, (user) => user.chats, { eager: true })
   owner: User;
 
   @ManyToMany(() => User, (user) => user.joinedChats, { eager: true })
