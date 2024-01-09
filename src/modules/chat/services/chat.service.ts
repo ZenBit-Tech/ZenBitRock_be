@@ -58,6 +58,8 @@ export class ChatService {
         chat.members = createChatDto.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
+      } else {
+        chat.members = [];
       }
       await this.chatRepository.save(chat);
       return { chat };
@@ -92,9 +94,16 @@ export class ChatService {
         throw new NotFoundException('Chat not found');
       }
 
-      chat.members = chatData.memberIds.map((memberId) => ({
-        id: memberId,
-      })) as User[];
+      if (chatData.memberIds && chatData.memberIds.length > 0) {
+        chat.members = chatData.memberIds.map((memberId) => ({
+          id: memberId,
+        })) as User[];
+      }
+
+      if (chatData.title) {
+        chat.title = chatData.title;
+      }
+
       await this.chatRepository.save(chat);
 
       return await this.chatRepository.findOne({ where: { id } });
