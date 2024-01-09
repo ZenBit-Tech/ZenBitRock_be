@@ -18,7 +18,7 @@ import {
   UserInfoResponse,
   UserSetAvatarResponse,
 } from 'src/common/types';
-
+import { Chat } from 'src/common/entities/chat.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
@@ -232,6 +232,19 @@ export class UserService {
       await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
 
       throw new HttpException('Updated', HttpStatus.ACCEPTED);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getChatsByUser(id: string): Promise<Chat[]> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: { joinedChats: true },
+      });
+
+      return user.joinedChats;
     } catch (error) {
       throw error;
     }
