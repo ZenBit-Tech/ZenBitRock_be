@@ -32,9 +32,10 @@ export class CreateChatDto {
 
   @ApiProperty({
     example: 'false',
-    description: 'Boolean is chat Private or no',
+    description: 'Boolean is chat Private or not',
     required: true,
   })
+ 
   @IsNotEmpty()
   isPrivate: boolean;
 }

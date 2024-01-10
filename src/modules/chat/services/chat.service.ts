@@ -47,11 +47,14 @@ export class ChatService {
   async createChat(
     createChatDto: CreateChatDto,
     userId: string,
+    memberIds: string[],
+    isPrivate: boolean,
   ): Promise<{ chat: Chat }> {
     try {
       const chat = this.chatRepository.create({
         title: createChatDto.title,
         owner: { id: userId },
+        members: memberIds.map((memberId) => ({ id: memberId })),
         isPrivate: createChatDto.isPrivate,
       });
       if (createChatDto.memberIds && createChatDto.memberIds.length > 0) {
@@ -66,6 +69,24 @@ export class ChatService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async checkForPrivateChat(
+    currentUserId: string,
+    targetAgentId: string,
+  ): Promise<string | null> {
+    const chat = await this.chatRepository
+      .createQueryBuilder('chat')
+      .innerJoin('chat.members', 'member')
+      .where('chat.isPrivate = :isPrivate', { isPrivate: true })
+      .andWhere('member.id IN (:...memberIds)', {
+        memberIds: [currentUserId, targetAgentId],
+      })
+      .groupBy('chat.id')
+      .having('COUNT(chat.id) = :count', { count: 2 })
+      .getOne();
+
+    return chat ? chat.id : null;
   }
 
   async deleteChat(id: string, userId: string): Promise<void> {
