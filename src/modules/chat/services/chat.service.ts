@@ -98,6 +98,8 @@ export class ChatService {
         chat.members = chatData.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
+      } else if (chatData.memberIds && chatData.memberIds.length === 0) {
+        chat.members = []
       }
 
       if (chatData.title) {
