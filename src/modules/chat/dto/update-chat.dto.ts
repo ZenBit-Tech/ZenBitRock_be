@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import {
-  ArrayMinSize,
   IsArray,
   IsNotEmpty,
   IsOptional,
@@ -29,6 +28,5 @@ export class UpdateChatDto {
   })
   @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   memberIds?: string[];
 }
