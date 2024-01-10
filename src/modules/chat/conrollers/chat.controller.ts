@@ -86,14 +86,7 @@ export class ChatController {
     @Body() createChatDto: CreateChatDto,
     @Request() req,
   ): Promise<{ chat: Chat }> {
-
-    const memberIds: string[] = createChatDto.memberIds || [];
-    return this.chatService.createChat(
-      createChatDto,
-      req.user.id,
-      memberIds,
-      createChatDto.isPrivate,
-    );
+    return this.chatService.createChat(createChatDto, req.user.id);
   }
 
   @Delete(':id')
@@ -117,6 +110,5 @@ export class ChatController {
     } catch (error) {
       throw error;
     }
-
   }
 }

@@ -47,22 +47,18 @@ export class ChatService {
   async createChat(
     createChatDto: CreateChatDto,
     userId: string,
-    memberIds: string[],
-    isPrivate: boolean,
   ): Promise<{ chat: Chat }> {
     try {
       const chat = this.chatRepository.create({
         title: createChatDto.title,
         owner: { id: userId },
-        members: memberIds.map((memberId) => ({ id: memberId })),
         isPrivate: createChatDto.isPrivate,
       });
+
       if (createChatDto.memberIds && createChatDto.memberIds.length > 0) {
         chat.members = createChatDto.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
-      } else {
-        chat.members = [];
       }
       await this.chatRepository.save(chat);
       return { chat };
@@ -120,7 +116,7 @@ export class ChatService {
           id: memberId,
         })) as User[];
       } else if (chatData.memberIds && chatData.memberIds.length === 0) {
-        chat.members = []
+        chat.members = [];
       }
 
       if (chatData.title) {
