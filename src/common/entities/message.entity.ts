@@ -11,9 +11,9 @@ export class Message extends CoreEntity {
   @Column({ type: 'boolean', name: 'is_read', default: false })
   isRead: boolean;
 
-  @ManyToOne(() => Chat, (chat) => chat.messages)
+  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
   chat: Chat;
 
-  @ManyToOne(() => User, (user) => user.messages)
+  @ManyToOne(() => User, (user) => user.messages, { onDelete: 'CASCADE' })
   owner: User;
 }

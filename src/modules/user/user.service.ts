@@ -29,6 +29,7 @@ import { HTTPService } from '../http/http.service';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Chat) private chatRepository: Repository<Chat>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
     private httpService: HTTPService,
@@ -148,17 +149,29 @@ export class UserService {
 
   async deleteAccount(id: string): Promise<void> {
     try {
+
       const user = await this.userRepository.findOne({
-        where: {
-          id,
-        },
+        where: { id },
+        relations: { joinedChats: true },
       });
 
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
+      await this.chatRepository.delete({ owner: { id } });
+
+      for (const chat of user.joinedChats) {
+        chat.members = chat.members.filter((member) => member.id !== id);
+        await this.chatRepository.save(chat);
+      }
+
       const { qobrixAgentId, qobrixContactId } = user;
+
+      await this.httpService.deleteAllOpportunities(
+        'ContactNameContacts',
+        qobrixContactId,
+      );
 
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
