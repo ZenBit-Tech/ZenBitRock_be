@@ -18,13 +18,19 @@ export class Chat extends CoreEntity {
   @Column({ type: 'boolean', name: 'is_private', default: false })
   isPrivate: boolean;
 
-  @OneToMany(() => Message, (message) => message.chat)
+  @OneToMany(() => Message, (message) => message.chat, { onDelete: 'CASCADE' })
   messages: Message[];
 
-  @ManyToOne(() => User, (user) => user.chats, { eager: true })
+  @ManyToOne(() => User, (user) => user.chats, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   owner: User;
 
-  @ManyToMany(() => User, (user) => user.joinedChats, { eager: true })
+  @ManyToMany(() => User, (user) => user.joinedChats, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   members: User[];
 }

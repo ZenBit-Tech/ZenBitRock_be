@@ -7,6 +7,7 @@ import { ConfigModule } from 'common/configs/config.module';
 import { ConfigService } from 'common/configs/config.service';
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { User } from 'src/common/entities/user.entity';
+import { Chat } from 'src/common/entities/chat.entity';
 
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -14,7 +15,7 @@ import { HTTPService } from '../http/http.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Chat]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
