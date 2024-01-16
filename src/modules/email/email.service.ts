@@ -21,18 +21,7 @@ export class EmailService {
   ) {}
 
   async sendEmailVerificationCode(email: string): Promise<unknown> {
-    // const user = await this.userService.findByEmail(email);
 
-    // const users: User[] = await this.userService.findAllByEmail(email);
-
-    // // Фильтруем, чтобы получить последнего активного пользователя
-    // const activeUsers = users.filter((user) => !user.isDeleted);
-    // console.log('activeUser', activeUsers);
-    // const latestActiveUser = activeUsers.sort(
-    //   (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    // )[0];
-
-    // console.log('latestActiveUser', latestActiveUser);
     const latestActiveUser =
       await this.userService.findLatestActiveUserByEmail(email);
 
