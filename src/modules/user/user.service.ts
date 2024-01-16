@@ -29,12 +29,13 @@ import { HTTPService } from '../http/http.service';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Chat) private chatRepository: Repository<Chat>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
     private httpService: HTTPService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
+    async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
     
       const existingUser = await this.userRepository.findOne({
@@ -211,8 +212,6 @@ export class UserService {
           id,
         },
       });
-
-      console.log(user);
 
       if (!user) {
         throw new NotFoundException('User not found');
