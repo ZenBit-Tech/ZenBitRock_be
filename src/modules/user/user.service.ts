@@ -36,24 +36,33 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-      const existUser = await this.userRepository.findOne({
+    
+      const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
+          isDeleted: false,
         },
       });
 
-      if (existUser) {
+      if (existingUser) {
         throw new BadRequestException('This email already exists');
       }
+
 
       const user = await this.userRepository.save({
         email: createUserDto.email,
         password: await argon2.hash(createUserDto.password),
+        isDeleted: false,
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
       return {
-        user: { email: user.email, id: user.id, isVerified: user.isVerified },
+        user: {
+          email: user.email,
+          id: user.id,
+          isVerified: user.isVerified,
+          isDeleted: user.isDeleted,
+        },
         token,
       };
     } catch (error) {
@@ -66,6 +75,7 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
+          isDeleted: false,
         },
       });
     } catch (error) {
@@ -108,10 +118,40 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
+          isDeleted: false,
         },
       });
     } catch (error) {
       throw new Error(`Error finding user: ${error.message}`);
+    }
+  }
+
+  async findAllByEmail(email: string): Promise<User[]> {
+    try {
+      return await this.userRepository.find({
+        where: {
+          email,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Error finding users: ${error.message}`);
+    }
+  }
+
+  async findLatestActiveUserByEmail(email: string): Promise<User> {
+    try {
+      const users = await this.userRepository.find({
+        where: { email },
+        order: { createdAt: 'DESC' },
+      });
+
+      const activeUser = users.find((user) => !user.isDeleted);
+      if (!activeUser) {
+        throw new Error('Active user not found');
+      }
+      return activeUser;
+    } catch (error) {
+      throw new Error(`Error finding active user: ${error.message}`);
     }
   }
 
@@ -128,7 +168,21 @@ export class UserService {
     data: Partial<User>,
   ): Promise<UpdateResult> {
     try {
-      return await this.userRepository.update({ email }, data);
+      const user = await this.userRepository.findOne({
+        where: {
+          email: email,
+          isDeleted: false,
+        },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
     }
@@ -136,9 +190,13 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-      const deletedUser = await this.userRepository.delete({ id });
 
-      if (!deletedUser.affected) throw new NotFoundException('Not found');
+      const user = await this.userRepository.findOne({ where: { id } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      await this.userRepository.update(id, { isDeleted: true });
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -154,15 +212,20 @@ export class UserService {
         },
       });
 
+      console.log(user);
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
       const { qobrixAgentId, qobrixContactId } = user;
-
+      await this.httpService.deleteAllOpportunities(
+        'ContactNameContacts',
+        qobrixContactId,
+      );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
-      await this.userRepository.delete({ id });
+      await this.userRepository.update(id, { isDeleted: true });
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {

@@ -8,6 +8,7 @@ import {
 import { ConfigService } from 'src/common/configs/config.service';
 import { UserService } from '../user/user.service';
 import { CODE_LENGTH, generateCode } from './lib';
+import { User } from 'src/common/entities/user.entity';
 
 @Injectable()
 export class EmailService {
@@ -20,18 +21,32 @@ export class EmailService {
   ) {}
 
   async sendEmailVerificationCode(email: string): Promise<unknown> {
-    const user = await this.userService.findByEmail(email);
+    // const user = await this.userService.findByEmail(email);
 
-    if (!user) throw new UnauthorizedException(`User doesn't exist`);
+    // const users: User[] = await this.userService.findAllByEmail(email);
+
+    // // Фильтруем, чтобы получить последнего активного пользователя
+    // const activeUsers = users.filter((user) => !user.isDeleted);
+    // console.log('activeUser', activeUsers);
+    // const latestActiveUser = activeUsers.sort(
+    //   (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    // )[0];
+
+    // console.log('latestActiveUser', latestActiveUser);
+    const latestActiveUser =
+      await this.userService.findLatestActiveUserByEmail(email);
+
+    if (!latestActiveUser)
+      throw new UnauthorizedException(`User doesn't exist`);
     const code = generateCode(CODE_LENGTH);
 
-    await this.userService.updateById(user.id, {
+    await this.userService.updateById(latestActiveUser.id, {
       isVerified: false,
       verificationCode: code,
     });
 
     return this.mailerService.sendMail({
-      to: user.email,
+      to: latestActiveUser.email,
       from: this.config.get('MAIL_USER'),
       subject: 'Verify your email address',
       html: `<p>Verification code: ${code}</p>`,
@@ -39,7 +54,7 @@ export class EmailService {
   }
 
   async sendCodeForRestorePassword(email: string): Promise<void> {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userService.findLatestActiveUserByEmail(email);
 
     if (!user) throw new UnauthorizedException(`User doesn't exist`);
     const code = generateCode(CODE_LENGTH);

@@ -24,7 +24,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     try {
-      const user = await this.userService.findOne(email);
+      const user = await this.userService.findLatestActiveUserByEmail(email);
 
       if (!user) {
         throw new BadRequestException('User not found');
@@ -44,6 +44,10 @@ export class AuthService {
 
   async login(user: User): Promise<UserSignInResponse> {
     try {
+      if (user.isDeleted) {
+        throw new UnauthorizedException('Access denied for deleted users');
+      }
+
       return {
         user: {
           email: user.email,
@@ -61,6 +65,7 @@ export class AuthService {
           description: user.description,
           avatarUrl: user.avatarUrl,
           avatarPublicId: user.avatarPublicId,
+          isDeleted: user.isDeleted,
         },
 
         token: this.jwtService.sign({ id: user.id, email: user.email }),
@@ -74,18 +79,28 @@ export class AuthService {
     email: string,
     code: string,
   ): Promise<UserProfileResponse> {
-    const user: User = await this.userService.findByEmail(email);
+    try {
+     
+      const latestActiveUser =
+        await this.userService.findLatestActiveUserByEmail(email);
 
-    if (!user) throw new BadRequestException("User doesn't exist!");
+      if (!latestActiveUser)
+        throw new BadRequestException("User doesn't exist!");
 
-    if (code !== user.verificationCode)
-      throw new ForbiddenException('Incorrect verification code!');
+      if (code !== latestActiveUser.verificationCode)
+        throw new ForbiddenException('Incorrect verification code!');
 
-    if (user.isVerified) throw new ConflictException('Email already activated');
+      if (latestActiveUser.isVerified)
+        throw new ConflictException('Email already activated');
 
-    await this.userService.updateById(user.id, { isVerified: true });
+      await this.userService.updateById(latestActiveUser.id, {
+        isVerified: true,
+      });
 
-    return await this.userService.findByEmail(email);
+      return await this.userService.findOneById(latestActiveUser.id);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async resetPassword(
@@ -94,13 +109,14 @@ export class AuthService {
     code: string,
   ): Promise<UpdateResult> {
     try {
-      const user = await this.userService.findByEmail(email);
+     
+      const user = await this.userService.findLatestActiveUserByEmail(email);
 
       if (!user || code !== user.verificationCode) {
         throw new BadRequestException('Invalid code');
       }
       const hashedPassword = await argon2.hash(password);
-      return await this.userService.updateByEmail(email, {
+      return await this.userService.updateByEmail(user.email, {
         password: hashedPassword,
       });
     } catch (error) {
@@ -112,7 +128,8 @@ export class AuthService {
     oldPassword: string,
   ): Promise<boolean> {
     try {
-      const user = await this.userService.findByEmail(email);
+      
+      const user = await this.userService.findLatestActiveUserByEmail(email);
       if (!user) {
         throw new NotFoundException('User not found');
       }
