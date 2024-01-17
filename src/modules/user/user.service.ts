@@ -35,9 +35,8 @@ export class UserService {
     private httpService: HTTPService,
   ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
+  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-    
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
@@ -49,11 +48,11 @@ export class UserService {
         throw new BadRequestException('This email already exists');
       }
 
-
       const user = await this.userRepository.save({
         email: createUserDto.email,
         password: await argon2.hash(createUserDto.password),
         isDeleted: false,
+        receiveNotifications: true,
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
@@ -63,6 +62,7 @@ export class UserService {
           id: user.id,
           isVerified: user.isVerified,
           isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
         },
         token,
       };
@@ -152,12 +152,16 @@ export class UserService {
       }
       return activeUser;
     } catch (error) {
-      throw new Error(`Error finding active user: ${error.message}`);
+      throw error;
     }
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
     try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new Error(`User with id ${id} not found`);
+      }
       return await this.userRepository.update(id, data);
     } catch (error) {
       throw error;
@@ -182,7 +186,7 @@ export class UserService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
@@ -191,7 +195,6 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-
       const user = await this.userRepository.findOne({ where: { id } });
 
       if (!user) {
