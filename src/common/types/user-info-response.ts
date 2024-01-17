@@ -14,6 +14,7 @@ type UserInfoResponse = {
   description: string;
   avatarUrl: string;
   avatarPublicId: string;
+  isDeleted: boolean;
 };
 
 export { type UserInfoResponse };

@@ -23,7 +23,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(user: User): Promise<UserInfoResponse> {
     try {
-      const userDetails = await this.userService.findOne(user.email);
+      const userDetails = await this.userService.findLatestActiveUserByEmail(
+        user.email,
+      );
+      if (userDetails.isDeleted) {
+        throw new UnauthorizedException('Access denied for deleted users');
+      }
       return {
         email: userDetails.email,
         id: userDetails.id,
@@ -40,6 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         description: userDetails.description,
         avatarUrl: userDetails.avatarUrl,
         avatarPublicId: userDetails.avatarPublicId,
+        isDeleted: userDetails.isDeleted,
       };
     } catch (error) {
       throw new UnauthorizedException('JWT validation failed');

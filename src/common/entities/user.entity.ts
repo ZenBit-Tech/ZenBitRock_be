@@ -84,12 +84,15 @@ export class User extends CoreEntity {
   @Column({ type: 'text', name: 'description', default: null })
   description: string;
 
-  @OneToMany(() => Message, (message) => message.owner, { onDelete: 'CASCADE' })
+  @Column({ type: 'boolean', name: 'isDeleted', default: false })
+  isDeleted: boolean;
+
+  @OneToMany(() => Message, (message) => message.owner)
   messages: Message[];
 
-  @OneToMany(() => Chat, (chat) => chat.owner, { onDelete: 'CASCADE' })
+  @OneToMany(() => Chat, (chat) => chat.owner)
   chats: Chat[];
 
-  @ManyToMany(() => Chat, (chat) => chat.members, { onDelete: 'CASCADE' })
+  @ManyToMany(() => Chat, (chat) => chat.members)
   joinedChats: Chat[];
 }
