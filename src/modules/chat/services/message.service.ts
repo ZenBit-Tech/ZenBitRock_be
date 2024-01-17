@@ -18,10 +18,10 @@ export class MessageService {
     private readonly messageRepository: Repository<Message>,
   ) {}
 
-  async getMessages(getMessagesDto: GetMessagesDto): Promise<Message[]> {
+  async getMessages(chatId: string): Promise<Message[]> {
     try {
       const messages = await this.messageRepository.find({
-        where: { chat: { id: getMessagesDto.chatId } },
+        where: { chat: { id: chatId } },
         relations: ['owner'],
       });
 
@@ -41,10 +41,12 @@ export class MessageService {
         chat: { id: createMessageDto.chatId },
         owner: { id: userId },
       });
+      const newMessage = await this.messageRepository.save(message);
 
-      await this.messageRepository.save(message);
-
-      return message;
+      return await this.messageRepository.findOne({
+        where: { id: newMessage.id },
+        relations: ['owner', 'chat'],
+      });
     } catch (error) {
       throw new Error('Failed to create message');
     }

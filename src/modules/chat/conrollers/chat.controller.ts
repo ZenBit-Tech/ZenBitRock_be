@@ -2,12 +2,14 @@ import {
   Body,
   Controller,
   Post,
+  Patch,
   UseGuards,
   Request,
   Get,
   Delete,
   Param,
 } from '@nestjs/common';
+
 import {
   ApiBearerAuth,
   ApiBody,
@@ -19,6 +21,7 @@ import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 import { CreateChatDto } from 'modules/chat/dto/create-chat.dto';
 import { ChatService } from 'modules/chat/services/chat.service';
 import { Chat } from 'src/common/entities/chat.entity';
+import { UpdateChatDto } from '../dto/update-chat.dto';
 
 @Controller('chats')
 @ApiBearerAuth()
@@ -46,6 +49,28 @@ export class ChatController {
     }
   }
 
+  @Get('/check-private-chat/:agentId')
+  @ApiOperation({ summary: 'Check for an existing private chat with an agent' })
+  @ApiResponse({
+    status: 200,
+    description: 'Existing chat id returned or null',
+  })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async checkPrivateChat(
+    @Param('agentId') agentId: string,
+    @Request() req,
+  ): Promise<{ chatId: string | null }> {
+    try {
+      const chatId = await this.chatService.checkForPrivateChat(
+        req.user.id,
+        agentId,
+      );
+      return { chatId };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a chat', description: 'Create a new chat' })
   @ApiBody({
@@ -61,8 +86,7 @@ export class ChatController {
     @Body() createChatDto: CreateChatDto,
     @Request() req,
   ): Promise<{ chat: Chat }> {
-    const memberIds: string[] = createChatDto.memberIds || [];
-    return this.chatService.createChat(createChatDto, req.user.id, memberIds);
+    return this.chatService.createChat(createChatDto, req.user.id);
   }
 
   @Delete(':id')
@@ -71,5 +95,20 @@ export class ChatController {
   @ApiResponse({ status: 404, description: 'Not found' })
   deleteChat(@Param('id') id: string, @Request() req): Promise<void> {
     return this.chatService.deleteChat(id, req.user.id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Updating chat data' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateChat(
+    @Param('id') id: string,
+    @Body() chatData: UpdateChatDto,
+  ): Promise<Chat> {
+    try {
+      return await this.chatService.updateChatData(id, chatData);
+    } catch (error) {
+      throw error;
+    }
   }
 }

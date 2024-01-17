@@ -85,13 +85,13 @@ export class User extends CoreEntity {
   @Column({ type: 'text', name: 'description', default: null })
   description: string;
 
-  @OneToMany(() => Message, (message) => message.owner)
+  @OneToMany(() => Message, (message) => message.owner, { onDelete: 'CASCADE' })
   messages: Message[];
 
-  @OneToMany(() => Chat, (chat) => chat.owner)
+  @OneToMany(() => Chat, (chat) => chat.owner, { onDelete: 'CASCADE' })
   chats: Chat[];
 
-  @ManyToMany(() => Chat, (chat) => chat.members)
+  @ManyToMany(() => Chat, (chat) => chat.members, { onDelete: 'CASCADE' })
   joinedChats: Chat[];
 
   @OneToMany(() => ChatMessageReader, (reader) => reader.user)

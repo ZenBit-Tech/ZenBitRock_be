@@ -1,9 +1,9 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
-import { Chat } from 'common/entities/chat.entity';
-import { ChatMessageReader } from 'common/entities/chatMessageReader.entity';
-import { CoreEntity } from 'common/entities/core.entity';
-import { User } from 'common/entities/user.entity';
+import { Chat } from './chat.entity';
+import { ChatMessageReader } from './chatMessageReader.entity';
+import { CoreEntity } from './core.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class Message extends CoreEntity {
@@ -16,9 +16,9 @@ export class Message extends CoreEntity {
   @OneToMany(() => ChatMessageReader, (reader) => reader.message)
   readers: ChatMessageReader[];
 
-  @ManyToOne(() => Chat, (chat) => chat.messages)
+  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
   chat: Chat;
 
-  @ManyToOne(() => User, (user) => user.messages)
+  @ManyToOne(() => User, (user) => user.messages, { onDelete: 'CASCADE' })
   owner: User;
 }

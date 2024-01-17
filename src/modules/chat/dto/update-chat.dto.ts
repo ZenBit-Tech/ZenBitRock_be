@@ -8,15 +8,16 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateChatDto {
+export class UpdateChatDto {
   @ApiProperty({
     example: '12345678',
     description: 'Chat title field',
   })
+  @IsOptional()
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(100)
-  title: string;
+  title?: string;
 
   @ApiProperty({
     example: [
@@ -24,18 +25,8 @@ export class CreateChatDto {
       'cb319a67-7386-4369-9535-221f6de2672d',
     ],
     description: 'Array of user IDs to be added as members',
-    required: false,
   })
   @IsOptional()
   @IsArray()
   memberIds?: string[];
-
-  @ApiProperty({
-    example: 'false',
-    description: 'Boolean is chat Private or not',
-    required: true,
-  })
- 
-  @IsNotEmpty()
-  isPrivate: boolean;
 }

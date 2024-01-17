@@ -33,7 +33,7 @@ export class MessageController {
     @Query() getMessagesDto: GetMessagesDto,
   ): Promise<Message[]> {
     try {
-      return await this.messageService.getMessages(getMessagesDto);
+      return await this.messageService.getMessages(getMessagesDto.chatId);
     } catch (error) {
       throw new Error('Failed to get messages');
     }
