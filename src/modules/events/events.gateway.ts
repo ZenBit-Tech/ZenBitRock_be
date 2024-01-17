@@ -1,4 +1,4 @@
-import { Inject, Logger } from '@nestjs/common';
+import { Inject, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server } from 'socket.io';
 import {
@@ -16,6 +16,7 @@ import { SocketWithAuth, TokenPayload } from 'src/common/types';
 import { CreateMessageDto } from '../chat/dto/create-message.dto';
 import { MessageService } from '../chat/services/message.service';
 import { UserService } from '../user/user.service';
+import { ChatService } from '../chat/services/chat.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -26,6 +27,8 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   private userService: UserService;
   @Inject()
   private messageService: MessageService;
+  @Inject()
+  private chatService: ChatService;
 
   @WebSocketServer()
   server: Server;
@@ -38,6 +41,12 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
           socket.handshake.auth.token || socket.handshake.headers['token'];
 
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
+
+        const crendetialsInvalid = !id || !email;
+
+        if (crendetialsInvalid) {
+          next(new UnauthorizedException('Invalid credentials'));
+        }
 
         socket.userId = id;
         socket.userEmail = email;
@@ -86,12 +95,21 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     try {
       const userId = client.userId;
 
-      const message = await this.messageService.createMessage(
-        createMessageDto,
+      const isMember = await this.chatService.checkUserisChatMember(
+        createMessageDto.chatId,
         userId,
       );
 
-      this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+      if (isMember) {
+        const message = await this.messageService.createMessage(
+          createMessageDto,
+          userId,
+        );
+
+        this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+      } else {
+        client.emit('errorMessage', { message: 'Not a chat  member' });
+      }
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
