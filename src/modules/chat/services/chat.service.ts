@@ -130,4 +130,15 @@ export class ChatService {
       throw error;
     }
   }
+
+  async checkUserisChatMember(
+    chatId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const chat = await this.chatRepository.findOne({
+      where: { id: chatId, members: { id: userId } },
+    });
+
+    return Boolean(chat);
+  }
 }
