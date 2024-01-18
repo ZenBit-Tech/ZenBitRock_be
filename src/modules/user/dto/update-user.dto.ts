@@ -44,6 +44,12 @@ export class UpdateUserDto {
   @IsString()
   qobrixAgentId?: string;
 
+  @ApiProperty({ example: '123456789', description: 'User id in Qobrix' })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  qobrixUserId?: string;
+
   @ApiProperty({ example: 'Blagovist', description: 'Agency name' })
   @IsOptional()
   @IsString()
