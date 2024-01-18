@@ -11,19 +11,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
 
+import { ChatsByUserDto } from 'modules/chat/dto/chats-by-user.dto';
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
+import { HTTPService } from 'modules/http/http.service';
+import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import {
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
 } from 'src/common/types';
-import { Chat } from 'src/common/entities/chat.entity';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { HTTPService } from '../http/http.service';
 
 @Injectable()
 export class UserService {
@@ -37,7 +39,6 @@ export class UserService {
 
     async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-    
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
@@ -48,7 +49,6 @@ export class UserService {
       if (existingUser) {
         throw new BadRequestException('This email already exists');
       }
-
 
       const user = await this.userRepository.save({
         email: createUserDto.email,
@@ -171,7 +171,7 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: {
-          email: email,
+          email,
           isDeleted: false,
         },
         order: {
@@ -182,7 +182,7 @@ export class UserService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
@@ -191,7 +191,6 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-
       const user = await this.userRepository.findOne({ where: { id } });
 
       if (!user) {
@@ -261,16 +260,14 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      if (oldAvatarPublicId)
-        await this.cloudinaryService.deleteImage(oldAvatarPublicId);
+      if (oldAvatarPublicId) await this.cloudinaryService.deleteImage(oldAvatarPublicId);
 
       const upoadedAvatarData = await this.cloudinaryService.upload(file);
       if (!upoadedAvatarData) {
         throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } =
-        upoadedAvatarData;
+      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } = upoadedAvatarData;
       await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
 
       return { avatarUrl, avatarPublicId };
@@ -307,6 +304,26 @@ export class UserService {
       });
 
       return user.joinedChats;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getChatsByUserWithMessages(data: ChatsByUserDto): Promise<Chat[]> {
+    const { userId } = data;
+    try {
+      const chats = await this.chatRepository
+        .createQueryBuilder('chat')
+        .leftJoinAndSelect('chat.messages', 'message')
+        .leftJoinAndSelect('chat.members', 'members')
+        .leftJoinAndSelect('message.owner', 'owner')
+        .where('members.id = :userId', { userId })
+        .leftJoinAndSelect('chat.members', 'allMembers')
+        .getMany();
+
+      if (!chats) throw new NotFoundException('Chats not found');
+
+      return chats;
     } catch (error) {
       throw error;
     }
