@@ -12,15 +12,14 @@ import { ConfigService } from './common/configs/config.service';
 import { typeOrmAsyncConfig } from './common/configs/database/typeorm-config';
 import { QobrixProxyMiddleware } from './middleware/qobrix.middleware';
 import { AuthModule } from './modules/auth/auth.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { ContentModule } from './modules/content/content.module';
 import { EmailModule } from './modules/email/email.module';
+import { EventsModule } from './modules/events/events.module';
+import { LeadModule } from './modules/lead/lead.module';
 import { UserModule } from './modules/user/user.module';
 import { VerificationModule } from './modules/verification/verification.module';
-import { LeadModule } from './modules/lead/lead.module';
-import { EventsModule } from './modules/events/events.module';
-import { ChatModule } from './modules/chat/chat.module';
-
-
 
 @Module({
   imports: [
@@ -34,6 +33,7 @@ import { ChatModule } from './modules/chat/chat.module';
     LeadModule,
     EventsModule,
     ChatModule,
+    ContentModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
