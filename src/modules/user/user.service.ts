@@ -162,7 +162,9 @@ export class UserService {
       if (!user) {
         throw new Error(`User with id ${id} not found`);
       }
-      return await this.userRepository.update(id, data);
+
+      await this.userRepository.update(id, data);
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;
     }
