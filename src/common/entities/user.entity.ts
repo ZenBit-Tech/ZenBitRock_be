@@ -87,6 +87,9 @@ export class User extends CoreEntity {
   @Column({ type: 'boolean', name: 'isDeleted', default: false })
   isDeleted: boolean;
 
+  @Column({ type: 'boolean', name: 'receiveNotifications', default: true })
+  receiveNotifications: boolean;
+
   @OneToMany(() => Message, (message) => message.owner)
   messages: Message[];
 

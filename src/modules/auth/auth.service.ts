@@ -66,6 +66,7 @@ export class AuthService {
           avatarUrl: user.avatarUrl,
           avatarPublicId: user.avatarPublicId,
           isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
         },
 
         token: this.jwtService.sign({ id: user.id, email: user.email }),

@@ -46,6 +46,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         avatarUrl: userDetails.avatarUrl,
         avatarPublicId: userDetails.avatarPublicId,
         isDeleted: userDetails.isDeleted,
+        receiveNotifications: userDetails.receiveNotifications,
       };
     } catch (error) {
       if (error) {
