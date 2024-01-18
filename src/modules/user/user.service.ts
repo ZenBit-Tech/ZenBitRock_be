@@ -138,6 +138,8 @@ export class UserService {
   }
 
   async findLatestActiveUserByEmail(email: string): Promise<User> {
+    const isConnectionInitialized =
+      this.userRepository.manager.connection.isInitialized;
     try {
       const users = await this.userRepository.find({
         where: { email },
@@ -151,7 +153,7 @@ export class UserService {
       return activeUser;
     } catch (error) {
       throw new Error(
-        `Error finding active user: ${error.message} connection status: ${this.userRepository.manager.connection.isInitialized}`,
+        `Error finding active user: ${error.message} connection status: ${isConnectionInitialized}`,
       );
     }
   }
