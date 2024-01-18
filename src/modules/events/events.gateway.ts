@@ -66,6 +66,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     });
   }
 
+  async addToRoom(userId: string, chatId: string): Promise<void> {
+    const sockets = await this.server.in(userId).fetchSockets();
+    sockets.forEach((socket) => socket.join(chatId));
+  }
+
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
     return await this.messageService.getMessages(chatId);

@@ -19,5 +19,6 @@ import { UserModule } from '../user/user.module';
     }),
   ],
   providers: [EventsGateway],
+  exports: [EventsGateway],
 })
 export class EventsModule {}

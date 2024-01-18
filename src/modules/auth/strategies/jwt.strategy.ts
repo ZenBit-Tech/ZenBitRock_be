@@ -48,7 +48,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         isDeleted: userDetails.isDeleted,
       };
     } catch (error) {
-      throw new UnauthorizedException('JWT validation failed');
+      if (error) {
+        throw error;
+      }
+      throw new UnauthorizedException(`JWT validation failed`);
     }
   }
 }
