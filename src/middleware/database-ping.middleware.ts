@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from 'src/modules/user/user.service';
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 200;
+const RETRY_DELAY = 400;
 
 @Injectable()
 export class DatabasePingMiddleware implements NestMiddleware {
