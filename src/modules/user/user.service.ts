@@ -35,9 +35,8 @@ export class UserService {
     private httpService: HTTPService,
   ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
+  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-    
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
@@ -48,7 +47,6 @@ export class UserService {
       if (existingUser) {
         throw new BadRequestException('This email already exists');
       }
-
 
       const user = await this.userRepository.save({
         email: createUserDto.email,
@@ -152,7 +150,9 @@ export class UserService {
       }
       return activeUser;
     } catch (error) {
-      throw new Error(`Error finding active user: ${error.message}`);
+      throw new Error(
+        `Error finding active user: ${error.message} connection status: ${this.userRepository.manager.connection.isInitialized}`,
+      );
     }
   }
 
@@ -182,7 +182,7 @@ export class UserService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
@@ -191,7 +191,6 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-
       const user = await this.userRepository.findOne({ where: { id } });
 
       if (!user) {

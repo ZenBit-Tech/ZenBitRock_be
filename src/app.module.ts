@@ -20,8 +20,6 @@ import { LeadModule } from './modules/lead/lead.module';
 import { EventsModule } from './modules/events/events.module';
 import { ChatModule } from './modules/chat/chat.module';
 
-
-
 @Module({
   imports: [
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
