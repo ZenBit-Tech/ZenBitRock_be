@@ -1,8 +1,10 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -10,6 +12,7 @@ import { Repository } from 'typeorm';
 
 import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
+import { EventsGateway } from 'src/modules/events/events.gateway';
 
 import { CreateChatDto } from '../dto/create-chat.dto';
 import { UpdateChatDto } from '../dto/update-chat.dto';
@@ -19,6 +22,8 @@ export class ChatService {
   constructor(
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
+    @Inject(forwardRef(() => EventsGateway))
+    private eventsGateway: EventsGateway,
   ) {}
 
   async getChats(): Promise<Chat[] | []> {
@@ -61,6 +66,10 @@ export class ChatService {
         })) as User[];
       }
       await this.chatRepository.save(chat);
+      chat.members.forEach(
+        async (member) =>
+          await this.eventsGateway.addToRoom(member.id, chat.id),
+      );
       return { chat };
     } catch (error) {
       throw error;
@@ -115,6 +124,10 @@ export class ChatService {
         chat.members = chatData.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
+        chat.members.forEach(
+          async (member) =>
+            await this.eventsGateway.addToRoom(member.id, chat.id),
+        );
       } else if (chatData.memberIds && chatData.memberIds.length === 0) {
         chat.members = [];
       }
