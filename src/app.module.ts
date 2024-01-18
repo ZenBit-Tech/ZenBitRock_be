@@ -19,8 +19,8 @@ import { VerificationModule } from './modules/verification/verification.module';
 import { LeadModule } from './modules/lead/lead.module';
 import { EventsModule } from './modules/events/events.module';
 import { ChatModule } from './modules/chat/chat.module';
-
-
+import { DatabasePingMiddleware } from './middleware/database-ping.middleware';
+import { AuthController } from './modules/auth/auth.controller';
 
 @Module({
   imports: [
@@ -68,5 +68,6 @@ export class AppModule implements NestModule {
   // eslint-disable-next-line class-methods-use-this
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(QobrixProxyMiddleware).forRoutes('/qobrix-proxy/*');
+    consumer.apply(DatabasePingMiddleware).forRoutes(AuthController);
   }
 }
