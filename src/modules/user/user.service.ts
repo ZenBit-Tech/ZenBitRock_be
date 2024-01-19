@@ -11,19 +11,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
 
+import { ChatsByUserDto } from 'modules/chat/dto/chats-by-user.dto';
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
+import { HTTPService } from 'modules/http/http.service';
+import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import {
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
 } from 'src/common/types';
-import { Chat } from 'src/common/entities/chat.entity';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { HTTPService } from '../http/http.service';
 
 @Injectable()
 export class UserService {
@@ -35,9 +37,8 @@ export class UserService {
     private httpService: HTTPService,
   ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
+  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-    
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
@@ -49,11 +50,11 @@ export class UserService {
         throw new BadRequestException('This email already exists');
       }
 
-
       const user = await this.userRepository.save({
         email: createUserDto.email,
         password: await argon2.hash(createUserDto.password),
         isDeleted: false,
+        receiveNotifications: true,
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
@@ -63,6 +64,7 @@ export class UserService {
           id: user.id,
           isVerified: user.isVerified,
           isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
         },
         token,
       };
@@ -152,13 +154,19 @@ export class UserService {
       }
       return activeUser;
     } catch (error) {
-      throw new Error(`Error finding active user: ${error.message}`);
+      throw error;
     }
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
     try {
-      return await this.userRepository.update(id, data);
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new Error(`User with id ${id} not found`);
+      }
+
+      await this.userRepository.update(id, data);
+      throw new HttpException('Updated', HttpStatus.ACCEPTED);
     } catch (error) {
       throw error;
     }
@@ -171,7 +179,7 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: {
-          email: email,
+          email,
           isDeleted: false,
         },
         order: {
@@ -182,7 +190,7 @@ export class UserService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
@@ -191,7 +199,6 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-
       const user = await this.userRepository.findOne({ where: { id } });
 
       if (!user) {
@@ -307,6 +314,26 @@ export class UserService {
       });
 
       return user.joinedChats;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getChatsByUserWithMessages(data: ChatsByUserDto): Promise<Chat[]> {
+    const { userId } = data;
+    try {
+      const chats = await this.chatRepository
+        .createQueryBuilder('chat')
+        .leftJoinAndSelect('chat.messages', 'message')
+        .leftJoinAndSelect('chat.members', 'members')
+        .leftJoinAndSelect('message.owner', 'owner')
+        .where('members.id = :userId', { userId })
+        .leftJoinAndSelect('chat.members', 'allMembers')
+        .getMany();
+
+      if (!chats) throw new NotFoundException('Chats not found');
+
+      return chats;
     } catch (error) {
       throw error;
     }

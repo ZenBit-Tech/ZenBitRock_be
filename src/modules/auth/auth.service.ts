@@ -61,11 +61,13 @@ export class AuthService {
           phone: user.phone,
           qobrixContactId: user.qobrixContactId,
           qobrixAgentId: user.qobrixAgentId,
+          qobrixUserId: user.qobrixUserId,
           agencyName: user.agencyName,
           description: user.description,
           avatarUrl: user.avatarUrl,
           avatarPublicId: user.avatarPublicId,
           isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
         },
 
         token: this.jwtService.sign({ id: user.id, email: user.email }),
@@ -80,7 +82,6 @@ export class AuthService {
     code: string,
   ): Promise<UserProfileResponse> {
     try {
-     
       const latestActiveUser =
         await this.userService.findLatestActiveUserByEmail(email);
 
@@ -109,7 +110,6 @@ export class AuthService {
     code: string,
   ): Promise<UpdateResult> {
     try {
-     
       const user = await this.userService.findLatestActiveUserByEmail(email);
 
       if (!user || code !== user.verificationCode) {
@@ -128,7 +128,6 @@ export class AuthService {
     oldPassword: string,
   ): Promise<boolean> {
     try {
-      
       const user = await this.userService.findLatestActiveUserByEmail(email);
       if (!user) {
         throw new NotFoundException('User not found');

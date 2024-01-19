@@ -52,7 +52,11 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<UserProfileResponse> {
-    return req.user;
+    try {
+      return req.user;
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Post('confirm-email')

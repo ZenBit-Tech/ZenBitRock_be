@@ -1,10 +1,11 @@
+/* eslint-disable import/no-cycle */
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 import { Chat } from './chat.entity';
+import { Content } from './content.entity';
 import { ContentStatus } from './contentStatus.entity';
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
-import { Content } from './content.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -80,6 +81,9 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'qobrixAgentId', default: null })
   qobrixAgentId: string;
 
+  @Column({ type: 'varchar', name: 'qobrixUserId', default: null })
+  qobrixUserId: string;
+
   @Column({ type: 'varchar', name: 'agencyName', default: null })
   agencyName: string;
 
@@ -88,6 +92,9 @@ export class User extends CoreEntity {
 
   @Column({ type: 'boolean', name: 'isDeleted', default: false })
   isDeleted: boolean;
+
+  @Column({ type: 'boolean', name: 'receiveNotifications', default: true })
+  receiveNotifications: boolean;
 
   @OneToMany(() => Message, (message) => message.owner)
   messages: Message[];

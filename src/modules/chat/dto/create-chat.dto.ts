@@ -35,7 +35,6 @@ export class CreateChatDto {
     description: 'Boolean is chat Private or not',
     required: true,
   })
- 
   @IsNotEmpty()
   isPrivate: boolean;
 }

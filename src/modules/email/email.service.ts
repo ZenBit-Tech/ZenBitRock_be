@@ -21,7 +21,6 @@ export class EmailService {
   ) {}
 
   async sendEmailVerificationCode(email: string): Promise<unknown> {
-
     const latestActiveUser =
       await this.userService.findLatestActiveUserByEmail(email);
 
