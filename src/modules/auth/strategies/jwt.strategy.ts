@@ -41,6 +41,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         phone: userDetails.phone,
         qobrixContactId: userDetails.qobrixContactId,
         qobrixAgentId: userDetails.qobrixAgentId,
+        qobrixUserId: userDetails.qobrixUserId,
         agencyName: userDetails.agencyName,
         description: userDetails.description,
         avatarUrl: userDetails.avatarUrl,

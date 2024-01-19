@@ -1,8 +1,9 @@
+/* eslint-disable import/no-cycle */
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
+import { Chat } from './chat.entity';
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
-import { Chat } from './chat.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -77,6 +78,9 @@ export class User extends CoreEntity {
 
   @Column({ type: 'varchar', name: 'qobrixAgentId', default: null })
   qobrixAgentId: string;
+
+  @Column({ type: 'varchar', name: 'qobrixUserId', default: null })
+  qobrixUserId: string;
 
   @Column({ type: 'varchar', name: 'agencyName', default: null })
   agencyName: string;

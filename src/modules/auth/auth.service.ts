@@ -61,6 +61,7 @@ export class AuthService {
           phone: user.phone,
           qobrixContactId: user.qobrixContactId,
           qobrixAgentId: user.qobrixAgentId,
+          qobrixUserId: user.qobrixUserId,
           agencyName: user.agencyName,
           description: user.description,
           avatarUrl: user.avatarUrl,
