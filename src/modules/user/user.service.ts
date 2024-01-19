@@ -26,12 +26,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Message } from 'src/common/entities/message.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Chat) private chatRepository: Repository<Chat>,
+    @InjectRepository(Message)
+    private readonly messageRepository: Repository<Message>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
     private httpService: HTTPService,
@@ -197,6 +200,41 @@ export class UserService {
     }
   }
 
+  anonymizeUser(user: User): Partial<User> {
+    return {
+      ...user,
+      email: '',
+      password: '',
+      firstName: 'Deleted',
+      lastName: 'User',
+      isVerified: false,
+      verificationCode: '',
+      role: null,
+      gender: null,
+      dateOfBirth: null,
+      nationality: null,
+      identity: null,
+      status: null,
+      street: null,
+      city: null,
+      state: null,
+      zip: null,
+      country: null,
+      phone: null,
+      userDocumentUrl: null,
+      userDocumentPublicId: null,
+      avatarUrl: null,
+      avatarPublicId: null,
+      qobrixContactId: null,
+      qobrixAgentId: null,
+      qobrixUserId: null,
+      agencyName: null,
+      description: null,
+      receiveNotifications: false,
+      isDeleted: true,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     try {
       const user = await this.userRepository.findOne({ where: { id } });
@@ -204,7 +242,19 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      await this.userRepository.update(id, { isDeleted: true });
+      // await this.userRepository.update(id, { isDeleted: true });
+      // await this.userRepository.update(id, {
+
+      //   isDeleted: true,
+      // });
+
+      const anonymizedUserData = this.anonymizeUser(user);
+      await this.userRepository.update(id, anonymizedUserData);
+
+      await this.messageRepository.update(
+        { owner: { id: user.id } },
+        { content: '' },
+      );
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -231,7 +281,8 @@ export class UserService {
       );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
-      await this.userRepository.update(id, { isDeleted: true });
+      // await this.userRepository.update(id, { isDeleted: true });
+      await this.delete(id);
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
