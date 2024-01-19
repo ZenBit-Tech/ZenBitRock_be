@@ -7,31 +7,41 @@ import {
   Post,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { Content } from 'src/common/entities/content.entity';
+import { ContentResponse } from 'src/common/types/content/content.type';
+import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 
 import { ChangeStatusContentDto } from '../dto/content-status.dto';
 import { UpdateContentDto } from '../dto/content.dto';
 import { ContentService } from '../services/content.service';
 
 @Controller('content')
-@UseGuards(AuthGuard())
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
-  @Get()
-  getAllContent(): Promise<Content[]> {
+  @Get('/')
+  @ApiOperation({ summary: 'Getting all content' })
+  @ApiResponse({ status: 200, description: 'OK', type: Content, isArray: true })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  getAllContent(): Promise<ContentResponse[]> {
     return this.contentService.getAllContent();
   }
 
   @Patch('/:id/change-status')
+  @ApiOperation({ summary: 'Updating content status' })
+  @ApiResponse({ status: 202, description: 'Updated', type: Content })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   changeStatusContentById(
     @Param('id') contentId: string,
     @Request() req: { user: { id: string } },
     @Body() changeStatusDto: ChangeStatusContentDto,
-  ): Promise<Content> {
+  ): Promise<ContentResponse> {
     return this.contentService.changeStatusContentById(
       contentId,
       req.user.id,
@@ -39,11 +49,16 @@ export class ContentController {
     );
   }
 
-  @Post('/update')
+  @Post('/add-one')
+  @HttpCode(202)
+  @ApiOperation({ summary: 'Adding content data' })
+  @ApiResponse({ status: 202, description: 'Added' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   updateContent(
-    @Request() req: { user: { id: string } },
     @Body() updateContentDto: UpdateContentDto,
-  ): Promise<void> {
-    return this.contentService.updateContent(req.user.id, updateContentDto);
+  ): Promise<{ message: string }> {
+    return this.contentService
+      .updateContent(updateContentDto)
+      .then(() => ({ message: 'Content added successfully' }));
   }
 }

@@ -1,10 +1,10 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 import { Chat } from './chat.entity';
-import { Content } from './content.entity';
 import { ContentStatus } from './contentStatus.entity';
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
+import { Content } from './content.entity';
 
 @Entity()
 export class User extends CoreEntity {
@@ -98,10 +98,9 @@ export class User extends CoreEntity {
   @ManyToMany(() => Chat, (chat) => chat.members)
   joinedChats: Chat[];
 
-  @ManyToMany(() => Content, { cascade: true })
-  @JoinTable()
+  @ManyToMany(() => Content, (content) => content.users)
   contents: Content[];
 
   @OneToMany(() => ContentStatus, (contentStatus) => contentStatus.user)
-  contentStatus: ContentStatus[];
+  contentStatuses: ContentStatus[];
 }

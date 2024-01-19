@@ -1,7 +1,8 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { User } from './user.entity';
+
 import { Chat } from './chat.entity';
 import { CoreEntity } from './core.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class Message extends CoreEntity {

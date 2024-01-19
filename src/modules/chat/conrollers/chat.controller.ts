@@ -9,19 +9,19 @@ import {
   Delete,
   Param,
 } from '@nestjs/common';
-
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { ChatService } from '../services/chat.service';
-
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { CreateChatDto } from '../dto/create-chat.dto';
+
 import { Chat } from 'src/common/entities/chat.entity';
+
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CreateChatDto } from '../dto/create-chat.dto';
 import { UpdateChatDto } from '../dto/update-chat.dto';
+import { ChatService } from '../services/chat.service';
 
 @Controller('chats')
 @ApiBearerAuth()
