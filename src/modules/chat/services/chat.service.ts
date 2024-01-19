@@ -80,22 +80,18 @@ export class ChatService {
     currentUserId: string,
     targetAgentId: string,
   ): Promise<string | null> {
-    try {
-      const chat = await this.chatRepository
-        .createQueryBuilder('chat')
-        .innerJoin('chat.members', 'member')
-        .where('chat.isPrivate = :isPrivate', { isPrivate: true })
-        .andWhere('member.id IN (:...memberIds)', {
-          memberIds: [currentUserId, targetAgentId],
-        })
-        .groupBy('chat.id')
-        .having('COUNT(chat.id) = :count', { count: 2 })
-        .getOne();
+    const chat = await this.chatRepository
+      .createQueryBuilder('chat')
+      .innerJoin('chat.members', 'member')
+      .where('chat.isPrivate = :isPrivate', { isPrivate: true })
+      .andWhere('member.id IN (:...memberIds)', {
+        memberIds: [currentUserId, targetAgentId],
+      })
+      .groupBy('chat.id')
+      .having('COUNT(chat.id) = :count', { count: 2 })
+      .getOne();
 
-      return chat ? chat.id : null;
-    } catch (error) {
-      return error;
-    }
+    return chat ? chat.id : null;
   }
 
   async deleteChat(id: string, userId: string): Promise<void> {
