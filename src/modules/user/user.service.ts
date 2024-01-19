@@ -142,8 +142,6 @@ export class UserService {
   }
 
   async findLatestActiveUserByEmail(email: string): Promise<User> {
-    const isConnectionInitialized =
-      this.userRepository.manager.connection.isInitialized;
     try {
       const users = await this.userRepository.find({
         where: { email },
@@ -270,14 +268,16 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      if (oldAvatarPublicId) await this.cloudinaryService.deleteImage(oldAvatarPublicId);
+      if (oldAvatarPublicId)
+        await this.cloudinaryService.deleteImage(oldAvatarPublicId);
 
       const upoadedAvatarData = await this.cloudinaryService.upload(file);
       if (!upoadedAvatarData) {
         throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } = upoadedAvatarData;
+      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } =
+        upoadedAvatarData;
       await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
 
       return { avatarUrl, avatarPublicId };
