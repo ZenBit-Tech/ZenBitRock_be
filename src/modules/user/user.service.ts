@@ -16,6 +16,7 @@ import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { HTTPService } from 'modules/http/http.service';
 import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
+import { Message } from 'src/common/entities/message.entity';
 import {
   UserAuthResponse,
   UserInfoResponse,
@@ -26,7 +27,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Message } from 'src/common/entities/message.entity';
 
 @Injectable()
 export class UserService {
@@ -45,7 +45,6 @@ export class UserService {
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
-          isDeleted: false,
         },
       });
 
@@ -81,7 +80,6 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
       });
     } catch (error) {
@@ -124,7 +122,6 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
       });
     } catch (error) {
@@ -183,7 +180,6 @@ export class UserService {
       const user = await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
         order: {
           createdAt: 'DESC',
@@ -242,11 +238,6 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      // await this.userRepository.update(id, { isDeleted: true });
-      // await this.userRepository.update(id, {
-
-      //   isDeleted: true,
-      // });
 
       const anonymizedUserData = this.anonymizeUser(user);
       await this.userRepository.update(id, anonymizedUserData);
@@ -274,14 +265,14 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      const { qobrixAgentId, qobrixContactId } = user;
+      const { qobrixAgentId, qobrixContactId, qobrixUserId } = user;
       await this.httpService.deleteAllOpportunities(
         'ContactNameContacts',
         qobrixContactId,
       );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
-      // await this.userRepository.update(id, { isDeleted: true });
+      await this.httpService.deleteUserFromCRM(qobrixUserId);
       await this.delete(id);
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
