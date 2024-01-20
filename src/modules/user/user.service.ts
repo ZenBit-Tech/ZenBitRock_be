@@ -271,8 +271,8 @@ export class UserService {
         qobrixContactId,
       );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
-      await this.httpService.deleteContactFromCRM(qobrixContactId);
       await this.httpService.deleteUserFromCRM(qobrixUserId);
+      await this.httpService.deleteContactFromCRM(qobrixContactId);
       await this.delete(id);
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
