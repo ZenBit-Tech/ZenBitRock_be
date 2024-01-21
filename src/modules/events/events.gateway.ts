@@ -19,9 +19,9 @@ import { ChatService } from 'modules/chat/services/chat.service';
 import { MessageService } from 'modules/chat/services/message.service';
 import { UserService } from 'modules/user/user.service';
 import { Chat } from 'src/common/entities/chat.entity';
-import { Message } from 'src/common/entities/message.entity';
 import { ChatEvent } from 'src/common/enums';
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
+import { GetMessagesAllDto } from '../chat/dto/get-messages-all.dto';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -52,7 +52,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
-  async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
+  async getAllMessages(
+    @MessageBody() chatId: string,
+  ): Promise<GetMessagesAllDto[]> {
     return this.messageService.getMessages(chatId);
   }
 

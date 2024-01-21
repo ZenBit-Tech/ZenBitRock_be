@@ -11,7 +11,13 @@ export class Message extends CoreEntity {
   @Column()
   content: string;
 
-  @OneToMany(() => ChatMessageReader, (reader) => reader.message)
+  @Column({ type: 'boolean', name: 'is_read', default: false })
+  isRead: boolean;
+
+  @OneToMany(() => ChatMessageReader, (reader) => reader.message, {
+    cascade: true,
+    eager: true,
+  })
   readers: ChatMessageReader[];
 
   @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })

@@ -9,6 +9,7 @@ import { Message } from 'src/common/entities/message.entity';
 import { User } from 'src/common/entities/user.entity';
 
 import { CreateMessageDto } from '../dto/create-message.dto';
+import { GetMessagesAllDto } from '../dto/get-messages-all.dto';
 
 @Injectable()
 export class MessageService {
@@ -20,14 +21,21 @@ export class MessageService {
     private readonly chatRepository: Repository<Chat>,
   ) {}
 
-  async getMessages(chatId: string): Promise<Message[]> {
+  async getMessages(chatId: string): Promise<GetMessagesAllDto[]> {
     try {
       const messages = await this.messageRepository.find({
         where: { chat: { id: chatId } },
-        relations: ['owner'],
+        relations: ['owner', 'readers'],
       });
 
-      return messages;
+      const response = messages.map((message) => ({
+        ...message,
+        isRead: message.readers.some(
+          (reader) => reader.user.id === message.owner.id,
+        ),
+      }));
+
+      return response;
     } catch (error) {
       throw new Error('Failed to fetch messages');
     }

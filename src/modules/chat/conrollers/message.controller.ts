@@ -11,9 +11,10 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 import { CreateMessageDto } from 'modules/chat/dto/create-message.dto';
-import { GetMessagesDto } from 'modules/chat/dto/get-messages.dto';
 import { MessageService } from 'modules/chat/services/message.service';
 import { Message } from 'src/common/entities/message.entity';
+
+import { GetMessagesAllDto } from '../dto/get-messages-all.dto';
 
 @Controller('messages')
 @ApiBearerAuth()
@@ -28,8 +29,8 @@ export class MessageController {
   })
   @ApiResponse({ status: 200, description: 'Return a list of messages' })
   async getMessages(
-    @Query() getMessagesDto: GetMessagesDto,
-  ): Promise<Message[]> {
+    @Query() getMessagesDto: GetMessagesAllDto,
+  ): Promise<GetMessagesAllDto[]> {
     try {
       return await this.messageService.getMessages(getMessagesDto.chatId);
     } catch (error) {
