@@ -11,19 +11,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository, UpdateResult } from 'typeorm';
 
+import { ChatsByUserDto } from 'modules/chat/dto/chats-by-user.dto';
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
+import { HTTPService } from 'modules/http/http.service';
+import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import {
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
 } from 'src/common/types';
-import { Chat } from 'src/common/entities/chat.entity';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { HTTPService } from '../http/http.service';
 
 @Injectable()
 export class UserService {
@@ -37,24 +39,33 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
-      const existUser = await this.userRepository.findOne({
+      const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
+          isDeleted: false,
         },
       });
 
-      if (existUser) {
+      if (existingUser) {
         throw new BadRequestException('This email already exists');
       }
 
       const user = await this.userRepository.save({
         email: createUserDto.email,
         password: await argon2.hash(createUserDto.password),
+        isDeleted: false,
+        receiveNotifications: true,
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
       return {
-        user: { email: user.email, id: user.id, isVerified: user.isVerified },
+        user: {
+          email: user.email,
+          id: user.id,
+          isVerified: user.isVerified,
+          isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
+        },
         token,
       };
     } catch (error) {
@@ -67,6 +78,7 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
+          isDeleted: false,
         },
       });
     } catch (error) {
@@ -109,6 +121,7 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
+          isDeleted: false,
         },
       });
     } catch (error) {
@@ -116,8 +129,42 @@ export class UserService {
     }
   }
 
+  async findAllByEmail(email: string): Promise<User[]> {
+    try {
+      return await this.userRepository.find({
+        where: {
+          email,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Error finding users: ${error.message}`);
+    }
+  }
+
+  async findLatestActiveUserByEmail(email: string): Promise<User> {
+    try {
+      const users = await this.userRepository.find({
+        where: { email },
+        order: { createdAt: 'DESC' },
+      });
+
+      const activeUser = users.find((user) => !user.isDeleted);
+      if (!activeUser) {
+        throw new Error('Active user not found');
+      }
+      return activeUser;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
     try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new Error(`User with id ${id} not found`);
+      }
+
       return await this.userRepository.update(id, data);
     } catch (error) {
       throw error;
@@ -129,7 +176,21 @@ export class UserService {
     data: Partial<User>,
   ): Promise<UpdateResult> {
     try {
-      return await this.userRepository.update({ email }, data);
+      const user = await this.userRepository.findOne({
+        where: {
+          email,
+          isDeleted: false,
+        },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      return await this.userRepository.update({ id: user.id }, data);
     } catch (error) {
       throw new Error('Failed to update user by email');
     }
@@ -137,9 +198,12 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     try {
-      const deletedUser = await this.userRepository.delete({ id });
+      const user = await this.userRepository.findOne({ where: { id } });
 
-      if (!deletedUser.affected) throw new NotFoundException('Not found');
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      await this.userRepository.update(id, { isDeleted: true });
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -149,33 +213,24 @@ export class UserService {
 
   async deleteAccount(id: string): Promise<void> {
     try {
-
       const user = await this.userRepository.findOne({
-        where: { id },
-        relations: { joinedChats: true },
+        where: {
+          id,
+        },
       });
 
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      await this.chatRepository.delete({ owner: { id } });
-
-      for (const chat of user.joinedChats) {
-        chat.members = chat.members.filter((member) => member.id !== id);
-        await this.chatRepository.save(chat);
-      }
-
       const { qobrixAgentId, qobrixContactId } = user;
-
       await this.httpService.deleteAllOpportunities(
         'ContactNameContacts',
         qobrixContactId,
       );
-
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
-      await this.userRepository.delete({ id });
+      await this.userRepository.update(id, { isDeleted: true });
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -258,6 +313,26 @@ export class UserService {
       });
 
       return user.joinedChats;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getChatsByUserWithMessages(data: ChatsByUserDto): Promise<Chat[]> {
+    const { userId } = data;
+    try {
+      const chats = await this.chatRepository
+        .createQueryBuilder('chat')
+        .leftJoinAndSelect('chat.messages', 'message')
+        .leftJoinAndSelect('chat.members', 'members')
+        .leftJoinAndSelect('message.owner', 'owner')
+        .where('members.id = :userId', { userId })
+        .leftJoinAndSelect('chat.members', 'allMembers')
+        .getMany();
+
+      if (!chats) throw new NotFoundException('Chats not found');
+
+      return chats;
     } catch (error) {
       throw error;
     }

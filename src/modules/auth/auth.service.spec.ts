@@ -56,6 +56,8 @@ describe('AuthService', () => {
         id: user.id,
         email: user.email,
         token: 'generatedToken',
+        isDeleted: user.isDeleted,
+        receiveNotifications: user.receiveNotifications,
       });
     });
   });
