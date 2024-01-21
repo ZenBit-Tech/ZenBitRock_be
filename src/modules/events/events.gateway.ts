@@ -53,7 +53,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
-    return await this.messageService.getMessages(chatId);
+    return this.messageService.getMessages(chatId);
   }
 
   @SubscribeMessage('join')
@@ -110,7 +110,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage('getUnreadCount')
+  @SubscribeMessage(ChatEvent.RequestUnreadMessagesCount)
   async getUnreadCount(client: SocketWithAuth): Promise<void> {
     try {
       const { userId } = client;
@@ -122,7 +122,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage('getUnreadCountByChatId')
+  @SubscribeMessage(ChatEvent.RequestUnreadMessagesByIdCount)
   async getUnreadCountByChatId(
     client: SocketWithAuth,
     data: { chatId: string },
@@ -136,13 +136,13 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         chatId,
       );
 
-      client.emit('unreadCountByChatId', { chatId, unreadCount });
+      client.emit('unreadCountByChatId', unreadCount);
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
   }
 
-  @SubscribeMessage('markAsRead')
+  @SubscribeMessage(ChatEvent.RequestMarkAsRead)
   async markMessagesAsRead(
     client: SocketWithAuth,
     data: { messageId: string; chatId: string },
