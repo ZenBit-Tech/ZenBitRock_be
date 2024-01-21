@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { Chat } from './chat.entity';
@@ -9,9 +10,6 @@ import { User } from './user.entity';
 export class Message extends CoreEntity {
   @Column()
   content: string;
-
-  @Column({ type: 'boolean', name: 'is_read', default: false })
-  isRead: boolean;
 
   @OneToMany(() => ChatMessageReader, (reader) => reader.message)
   readers: ChatMessageReader[];

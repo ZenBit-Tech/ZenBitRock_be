@@ -12,8 +12,6 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 import { CreateMessageDto } from 'modules/chat/dto/create-message.dto';
 import { GetMessagesDto } from 'modules/chat/dto/get-messages.dto';
-import { GetUnreadMessagesDto } from 'modules/chat/dto/get-unread-messages.dto';
-import { UnreadMessageResponseDto } from 'modules/chat/dto/unread-messages-responce.dto';
 import { MessageService } from 'modules/chat/services/message.service';
 import { Message } from 'src/common/entities/message.entity';
 
@@ -60,26 +58,6 @@ export class MessageController {
       );
     } catch (error) {
       throw new Error('Failed to create message');
-    }
-  }
-
-  @Get('unread')
-  @ApiOperation({
-    summary: 'Get unread messages for a user',
-    description: 'Get a list of unread messages for a user',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Return a list of unread messages',
-    type: UnreadMessageResponseDto,
-  })
-  async getUnreadMessages(
-    @Query() getUnreadMessagesDto: GetUnreadMessagesDto,
-  ): Promise<UnreadMessageResponseDto> {
-    try {
-      return await this.messageService.getUnreadMessages(getUnreadMessagesDto);
-    } catch (error) {
-      throw new Error('Failed to get unread messages');
     }
   }
 }
