@@ -22,6 +22,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { DatabasePingMiddleware } from './middleware/database-ping.middleware';
 import { AuthController } from './modules/auth/auth.controller';
 import { UserController } from './modules/user/user.controller';
+import { ContentModule } from './modules/content/content.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { UserController } from './modules/user/user.controller';
     LeadModule,
     EventsModule,
     ChatModule,
+    ContentModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
