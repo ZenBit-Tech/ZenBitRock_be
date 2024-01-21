@@ -165,8 +165,7 @@ export class UserService {
         throw new Error(`User with id ${id} not found`);
       }
 
-      await this.userRepository.update(id, data);
-      throw new HttpException('Updated', HttpStatus.ACCEPTED);
+      return await this.userRepository.update(id, data);
     } catch (error) {
       throw error;
     }
