@@ -47,16 +47,16 @@ export class EmailService {
     if (!user) throw new UnauthorizedException(`User doesn't exist`);
     const code = generateCode(CODE_LENGTH);
 
-    await this.userService.updateById(user.id, {
-      verificationCode: code,
-      isVerified: false,
-    });
-
-    return this.mailerService.sendMail({
+    await this.mailerService.sendMail({
       to: user.email,
       from: this.config.get('MAIL_USER'),
       subject: 'Your code for reset password',
       html: `<p>Verification code: ${code}</p>`,
+    });
+
+    await this.userService.updateById(user.id, {
+      verificationCode: code,
+      isVerified: false,
     });
   }
 }
