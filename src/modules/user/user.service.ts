@@ -17,6 +17,8 @@ import { HTTPService } from 'modules/http/http.service';
 import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import {
+  GetChatsByUserWithMessages,
+  Pagination,
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
@@ -37,7 +39,7 @@ export class UserService {
     private httpService: HTTPService,
   ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
+  async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
       const existingUser = await this.userRepository.findOne({
         where: {
@@ -309,19 +311,54 @@ export class UserService {
     }
   }
 
-  async getChatsByUserWithMessages(data: ChatsByUserDto): Promise<Chat[]> {
-    const { userId } = data;
+  async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string):
+    Promise<Chat[]> {
+    const { page, limit, sortType } = data;
+
     try {
-      const chats = await this.chatRepository
+      let sortMethod: string;
+
+      switch (sortType) {
+        case 'oldest':
+          sortMethod = 'ASC';
+          break;
+        case 'latest':
+          sortMethod = 'DESC';
+          break;
+        default:
+          sortMethod = 'DESC';
+          break;
+      }
+
+      const [chats, count] = await this.chatRepository
         .createQueryBuilder('chat')
         .leftJoinAndSelect('chat.messages', 'message')
         .leftJoinAndSelect('chat.members', 'members')
         .leftJoinAndSelect('message.owner', 'owner')
         .where('members.id = :userId', { userId })
         .leftJoinAndSelect('chat.members', 'allMembers')
-        .getMany();
+        .orderBy('chat.updatedAt', sortMethod as 'ASC' | 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getManyAndCount();
 
       if (!chats) throw new NotFoundException('Chats not found');
+
+      const pageCount = Math.ceil(count / limit);
+
+      const pagination: Pagination = {
+        page_count: pageCount,
+        current_page: page,
+        has_next_page: page < pageCount,
+        has_prev_page: page > 1,
+        count,
+        limit,
+      };
+
+      const chatsData: GetChatsByUserWithMessages = {
+        data: chats,
+        pagination,
+      };
 
       return chats;
     } catch (error) {
