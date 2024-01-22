@@ -51,7 +51,7 @@ import { ChatModule } from './modules/chat/chat.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 7,
+        limit: 15,
       },
     ]),
   ],
