@@ -53,6 +53,10 @@ export class HTTPService {
   }
 
   async deleteAgentFromCRM(userId: string): Promise<void> {
+    if (!userId) {
+      return;
+    }
+
     const agentExists = await this.checkAgentExistsInCRM(userId);
     if (!agentExists) {
       return;
@@ -74,6 +78,9 @@ export class HTTPService {
   }
 
   async deleteContactFromCRM(userId: string): Promise<void> {
+    if (!userId) {
+      return;
+    }
     const contactExists = await this.checkContactExistsInCRM(userId);
     if (!contactExists) {
       return;
@@ -94,12 +101,15 @@ export class HTTPService {
   }
 
   async deleteUserFromCRM(userId: string): Promise<void> {
+    if (!userId) {
+      return;
+    }
     const userExists = await this.checkUserExistsInCRM(userId);
     if (!userExists) {
       return;
     }
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
-    const url = `${baseUrl}/users/${userId}`;
+    const url = `${baseUrl}/users/${userId}?trashed=true`;
     try {
       await lastValueFrom(this.httpService.delete(url));
     } catch (error) {
@@ -134,6 +144,9 @@ export class HTTPService {
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
     const url = `${baseUrl}/opportunities/${opportunityId}`;
     try {
+      if (!opportunityId) {
+        return;
+      }
       await lastValueFrom(this.httpService.delete(url));
     } catch (error) {
       throw new HttpException(
@@ -148,19 +161,24 @@ export class HTTPService {
 
   async deleteAllOpportunities(association: string, id: string): Promise<void> {
     try {
+      if (!id) {
+        return;
+      }
+
       const opportunities = await this.getAllOpportunities(association, id);
       if (opportunities.length === 0) {
         return;
       }
-      const deletePromises = opportunities.map((opportunity) =>
-        this.deleteOpportunity(opportunity.id),
-      );
-      await Promise.all(deletePromises);
+      const deletePromises = opportunities.map((opportunity) => {
+        this.deleteOpportunity(opportunity.id);
+      });
+
+      await Promise.allSettled(deletePromises);
     } catch (error) {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'Error deleting opportunities: ' + error.message,
+          error: `Error deleting opportunities: ${id}` + error.message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

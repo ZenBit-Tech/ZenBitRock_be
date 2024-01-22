@@ -257,6 +257,7 @@ export class UserService {
       const user = await this.userRepository.findOne({
         where: {
           id,
+          isDeleted: false,
         },
       });
 
@@ -378,5 +379,42 @@ export class UserService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async removeUsersWithoutCRMContact(): Promise<void> {
+    const users = await this.userRepository.find({
+      where: { isDeleted: false },
+    });
+
+    const promises = users.map(async (user) => {
+      try {
+        if (
+          !user.qobrixContactId ||
+          !user.qobrixAgentId ||
+          !user.qobrixUserId
+        ) {
+          return;
+        }
+        const contactExists = await this.httpService.checkContactExistsInCRM(
+          user.qobrixContactId,
+        );
+
+        const agentExists = await this.httpService.checkAgentExistsInCRM(
+          user.qobrixAgentId,
+        );
+
+        const userExists = await this.httpService.checkUserExistsInCRM(
+          user.qobrixUserId,
+        );
+
+        if (!contactExists || !agentExists || !userExists) {
+          await this.deleteAccount(user.id);
+        }
+      } catch (error) {
+        throw error;
+      }
+    });
+
+    await Promise.allSettled(promises);
   }
 }

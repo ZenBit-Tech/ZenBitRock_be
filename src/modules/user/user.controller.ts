@@ -98,6 +98,20 @@ export class UserController {
     }
   }
 
+  @Delete('/remove-unsynchronized-users')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Remove users without a CRM contact' })
+  @ApiResponse({ status: 200, description: 'Users removed successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async removeUsersWithoutCRMContact(): Promise<void> {
+    try {
+      await this.userService.removeUsersWithoutCRMContact();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Patch('/update')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
