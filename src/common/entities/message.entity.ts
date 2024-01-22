@@ -15,7 +15,7 @@ export class Message extends CoreEntity {
   isRead: boolean;
 
   @OneToMany(() => ChatMessageReader, (reader) => reader.message, {
-    cascade: true,
+    cascade: ['insert', 'update', 'recover', 'remove'],
     eager: true,
   })
   readers: ChatMessageReader[];
@@ -23,6 +23,10 @@ export class Message extends CoreEntity {
   @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
   chat: Chat;
 
-  @ManyToOne(() => User, (user) => user.messages, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.messages, {
+    onDelete: 'CASCADE',
+    cascade: true,
+    eager: true,
+  })
   owner: User;
 }

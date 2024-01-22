@@ -3,9 +3,9 @@ const ChatEvent = {
   NewMessage: 'new_message',
   RequestAllChats: 'request_all_chats',
   NewChat: 'new_chat',
-  RequestUnreadMessagesCount: 'getUnreadCount',
-  RequestUnreadMessagesByIdCount: 'getUnreadCountByChatId',
-  RequestMarkAsRead: 'markAsRead',
+  RequestUnreadMessagesCount: 'get_unread_count',
+  RequestUnreadMessagesByIdCount: 'get_unread_count_by_chat_id',
+  RequestMarkAsRead: 'mark_as_read',
 } as const;
 
 export { ChatEvent };

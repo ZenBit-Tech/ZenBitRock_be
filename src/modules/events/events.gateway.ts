@@ -21,7 +21,7 @@ import { UserService } from 'modules/user/user.service';
 import { Chat } from 'src/common/entities/chat.entity';
 import { ChatEvent } from 'src/common/enums';
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
-import { GetMessagesAllDto } from '../chat/dto/get-messages-all.dto';
+import { MessageResponse } from 'src/common/types/message/message.type';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -42,9 +42,40 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  afterInit(server: Server): void {}
+  afterInit(server: Server): void {
+    this.logger.log('Gateway initialized');
+    server.use((socket: SocketWithAuth, next) => {
+      try {
+        const token =
+          socket.handshake.auth.token || socket.handshake.headers.token;
 
-  async handleConnection(client: SocketWithAuth): Promise<void> {}
+        const { id, email } = this.jwtService.verify<TokenPayload>(token);
+
+        const crendetialsInvalid = !id || !email;
+
+        if (crendetialsInvalid) {
+          next(new UnauthorizedException('Invalid credentials'));
+        }
+
+        socket.userId = id;
+        socket.userEmail = email;
+
+        next();
+      } catch (error) {
+        next(error);
+      }
+    });
+  }
+
+  async handleConnection(client: SocketWithAuth): Promise<void> {
+    client.join(client.userId);
+    const chatList = await this.userService.getChatsByUser(client.userId);
+    if (chatList) {
+      chatList.forEach((chat) => {
+        client.join(chat.id);
+      });
+    }
+  }
 
   async addToRoom(userId: string, chatId: string): Promise<void> {
     const sockets = await this.server.in(userId).fetchSockets();
@@ -53,9 +84,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(
-    @MessageBody() chatId: string,
-  ): Promise<GetMessagesAllDto[]> {
-    return this.messageService.getMessages(chatId);
+    @MessageBody() { chatId, id }: { chatId: string; id: string },
+  ): Promise<MessageResponse[]> {
+    return this.messageService.getMessages(chatId, id);
   }
 
   @SubscribeMessage('join')
@@ -153,6 +184,8 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       const { userId } = client;
       const { messageId, chatId } = data;
 
+      console.log(data);
+      console.log(userId);
       await this.messageService.markMessageAsRead(messageId, userId, chatId);
 
       const unreadCount = await this.messageService.getUnreadCount(userId);

@@ -7,9 +7,9 @@ import { Chat } from 'src/common/entities/chat.entity';
 import { ChatMessageReader } from 'src/common/entities/chatMessageReader.entity';
 import { Message } from 'src/common/entities/message.entity';
 import { User } from 'src/common/entities/user.entity';
+import { MessageResponse } from 'src/common/types/message/message.type';
 
 import { CreateMessageDto } from '../dto/create-message.dto';
-import { GetMessagesAllDto } from '../dto/get-messages-all.dto';
 
 @Injectable()
 export class MessageService {
@@ -21,20 +21,29 @@ export class MessageService {
     private readonly chatRepository: Repository<Chat>,
   ) {}
 
-  async getMessages(chatId: string): Promise<GetMessagesAllDto[]> {
+  async getMessages(chatId: string, id: string): Promise<MessageResponse[]> {
     try {
-      const messages = await this.messageRepository.find({
-        where: { chat: { id: chatId } },
-        relations: ['owner', 'readers'],
-      });
-
-      const response = messages.map((message) => ({
-        ...message,
-        isRead: message.readers.some(
-          (reader) => reader.user.id === message.owner.id,
-        ),
+      const messages = await this.messageRepository
+        .createQueryBuilder('message')
+        .leftJoinAndSelect('message.owner', 'owner')
+        .leftJoinAndSelect('message.readers', 'readers')
+        .leftJoinAndSelect('readers.user', 'user')
+        .where('message.chat.id = :chatId', { chatId })
+        .getMany();
+      const response: MessageResponse[] = messages.map((message) => ({
+        id: message.id,
+        createdAt: message.createdAt,
+        content: message.content,
+        owner: {
+          id: message.owner.id,
+          firstName: message.owner.firstName,
+          lastName: message.owner.lastName,
+        },
+        isRead:
+          !message.readers && message.readers.length === 0
+            ? false
+            : message.readers.some((reader) => reader.user.id === id),
       }));
-
       return response;
     } catch (error) {
       throw new Error('Failed to fetch messages');
@@ -51,6 +60,7 @@ export class MessageService {
         chat: { id: createMessageDto.chatId },
         owner: { id: userId },
       });
+
       const newMessage = await this.messageRepository.save(message);
 
       await this.updateChatUpdatedAt(createMessageDto.chatId);
@@ -81,15 +91,12 @@ export class MessageService {
     try {
       const unreadCount = await this.messageRepository
         .createQueryBuilder('message')
-        .leftJoinAndSelect(
-          'message.readers',
-          'reader',
-          'reader.user = :userId',
-          { userId },
-        )
+        .leftJoin('message.readers', 'reader', 'reader.user = :userId', {
+          userId,
+        })
         .where('reader.id IS NULL')
         .getCount();
-
+      console.log(unreadCount);
       return unreadCount;
     } catch (error) {
       throw new Error('Failed to fetch unread message count');
@@ -113,7 +120,7 @@ export class MessageService {
         .andWhere('message.chat = :chatId', { chatId })
         .andWhere('reader.id IS NULL')
         .getCount();
-
+      console.log(unreadCount);
       return unreadCount;
     } catch (error) {
       throw new Error('Failed to fetch unread message count by chat');
@@ -126,31 +133,39 @@ export class MessageService {
     chatId: string,
   ): Promise<void> {
     try {
-      const message = await this.messageRepository.findOneOrFail({
-        where: { id: messageId },
-        relations: ['readers', 'chat'],
-      });
+      console.log(messageId);
+      console.log(chatId);
 
+      console.log(userId);
+
+      const message = await this.messageRepository.findOne({
+        where: { id: messageId },
+        relations: ['readers', 'chat', 'readers.user'],
+      });
+      console.log(message);
       if (!message) {
         throw new NotFoundException('Message not found');
       }
 
-      const user = await User.findOneOrFail({ where: { id: userId } });
+      const user = await User.findOne({
+        where: { id: userId },
+      });
 
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
       const isAlreadyRead = message.readers.some(
-        (reader) =>
-          reader.user.id === userId && reader.message.chat.id === chatId,
+        (reader) => reader.user.id === userId && reader.isRead,
       );
 
       if (!isAlreadyRead) {
         const reader = new ChatMessageReader();
-        reader.message = message;
+        reader.isRead = true;
         reader.user = user;
-        await ChatMessageReader.save(reader);
+        reader.message = message;
+
+        message.readers.push(reader);
 
         await this.messageRepository.save(message);
       }

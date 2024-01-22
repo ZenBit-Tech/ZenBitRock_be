@@ -13,8 +13,7 @@ import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 import { CreateMessageDto } from 'modules/chat/dto/create-message.dto';
 import { MessageService } from 'modules/chat/services/message.service';
 import { Message } from 'src/common/entities/message.entity';
-
-import { GetMessagesAllDto } from '../dto/get-messages-all.dto';
+import { MessageResponse } from 'src/common/types/message/message.type';
 
 @Controller('messages')
 @ApiBearerAuth()
@@ -29,10 +28,14 @@ export class MessageController {
   })
   @ApiResponse({ status: 200, description: 'Return a list of messages' })
   async getMessages(
-    @Query() getMessagesDto: GetMessagesAllDto,
-  ): Promise<GetMessagesAllDto[]> {
+    @Query() getMessagesDto: MessageResponse,
+    @Request() req: { user: { id: string } },
+  ): Promise<MessageResponse[]> {
     try {
-      return await this.messageService.getMessages(getMessagesDto.chatId);
+      return await this.messageService.getMessages(
+        getMessagesDto.chatId,
+        req.user.id,
+      );
     } catch (error) {
       throw new Error('Failed to get messages');
     }
