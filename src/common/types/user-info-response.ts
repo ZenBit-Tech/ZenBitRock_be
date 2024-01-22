@@ -10,11 +10,13 @@ type UserInfoResponse = {
   phone: string;
   qobrixContactId: string;
   qobrixAgentId: string;
+  qobrixUserId:string;
   agencyName: string;
   description: string;
   avatarUrl: string;
   avatarPublicId: string;
   isDeleted: boolean;
+  receiveNotifications: boolean;
 };
 
 export { type UserInfoResponse };

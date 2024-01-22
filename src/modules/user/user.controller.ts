@@ -15,8 +15,13 @@ import {
   MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
-
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
+import { UpdateResult } from 'typeorm';
 import { User } from 'src/common/entities/user.entity';
 import {
   UserAuthResponse,
@@ -30,6 +35,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserNotificationsDto } from './dto/update-notifications.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -102,6 +108,27 @@ export class UserController {
   async updateUser(@Body() userData: UpdateUserDto): Promise<UserInfoResponse> {
     try {
       return await this.userService.updateUserData(userData);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('/update-notifications')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update user notifications preference' })
+  @ApiResponse({ status: 202, description: 'Updated' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @UsePipes(new ValidationPipe())
+  async updateNotifications(
+    @Body() notificationsData: UpdateUserNotificationsDto,
+  ): Promise<UpdateResult> {
+    try {
+      const { userId, receiveNotifications } = notificationsData;
+
+      return await this.userService.updateById(userId, {
+        receiveNotifications,
+      });
     } catch (error) {
       throw error;
     }

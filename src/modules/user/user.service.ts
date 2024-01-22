@@ -16,6 +16,7 @@ import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
 import { HTTPService } from 'modules/http/http.service';
 import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
+import { Message } from 'src/common/entities/message.entity';
 import {
   GetChatsByUserWithMessages,
   Pagination,
@@ -34,6 +35,8 @@ export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Chat) private chatRepository: Repository<Chat>,
+    @InjectRepository(Message)
+    private readonly messageRepository: Repository<Message>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
     private httpService: HTTPService,
@@ -44,7 +47,6 @@ export class UserService {
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
-          isDeleted: false,
         },
       });
 
@@ -56,6 +58,7 @@ export class UserService {
         email: createUserDto.email,
         password: await argon2.hash(createUserDto.password),
         isDeleted: false,
+        receiveNotifications: true,
       });
 
       const token = this.jwtService.sign({ email: createUserDto.email });
@@ -65,6 +68,7 @@ export class UserService {
           id: user.id,
           isVerified: user.isVerified,
           isDeleted: user.isDeleted,
+          receiveNotifications: user.receiveNotifications,
         },
         token,
       };
@@ -78,7 +82,6 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
       });
     } catch (error) {
@@ -121,7 +124,6 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
       });
     } catch (error) {
@@ -154,12 +156,17 @@ export class UserService {
       }
       return activeUser;
     } catch (error) {
-      throw new Error(`Error finding active user: ${error.message}`);
+      throw error;
     }
   }
 
   async updateById(id: string, data: Partial<User>): Promise<UpdateResult> {
     try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new Error(`User with id ${id} not found`);
+      }
+
       return await this.userRepository.update(id, data);
     } catch (error) {
       throw error;
@@ -174,7 +181,6 @@ export class UserService {
       const user = await this.userRepository.findOne({
         where: {
           email,
-          isDeleted: false,
         },
         order: {
           createdAt: 'DESC',
@@ -191,6 +197,41 @@ export class UserService {
     }
   }
 
+  anonymizeUser(user: User): Partial<User> {
+    return {
+      ...user,
+      email: '',
+      password: '',
+      firstName: 'Deleted',
+      lastName: 'User',
+      isVerified: false,
+      verificationCode: '',
+      role: null,
+      gender: null,
+      dateOfBirth: null,
+      nationality: null,
+      identity: null,
+      status: null,
+      street: null,
+      city: null,
+      state: null,
+      zip: null,
+      country: null,
+      phone: null,
+      userDocumentUrl: null,
+      userDocumentPublicId: null,
+      avatarUrl: null,
+      avatarPublicId: null,
+      qobrixContactId: null,
+      qobrixAgentId: null,
+      qobrixUserId: null,
+      agencyName: null,
+      description: null,
+      receiveNotifications: false,
+      isDeleted: true,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     try {
       const user = await this.userRepository.findOne({ where: { id } });
@@ -198,7 +239,14 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      await this.userRepository.update(id, { isDeleted: true });
+
+      const anonymizedUserData = this.anonymizeUser(user);
+      await this.userRepository.update(id, anonymizedUserData);
+
+      await this.messageRepository.update(
+        { owner: { id: user.id } },
+        { content: '' },
+      );
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -218,14 +266,15 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      const { qobrixAgentId, qobrixContactId } = user;
+      const { qobrixAgentId, qobrixContactId, qobrixUserId } = user;
       await this.httpService.deleteAllOpportunities(
         'ContactNameContacts',
         qobrixContactId,
       );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
+      await this.httpService.deleteUserFromCRM(qobrixUserId);
       await this.httpService.deleteContactFromCRM(qobrixContactId);
-      await this.userRepository.update(id, { isDeleted: true });
+      await this.delete(id);
 
       throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
@@ -262,14 +311,16 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
 
-      if (oldAvatarPublicId) await this.cloudinaryService.deleteImage(oldAvatarPublicId);
+      if (oldAvatarPublicId)
+        await this.cloudinaryService.deleteImage(oldAvatarPublicId);
 
       const upoadedAvatarData = await this.cloudinaryService.upload(file);
       if (!upoadedAvatarData) {
         throw new BadRequestException('Error uploading the file to the server');
       }
 
-      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } = upoadedAvatarData;
+      const { fileUrl: avatarUrl, filePublicId: avatarPublicId } =
+        upoadedAvatarData;
       await this.userRepository.update(userId, { avatarUrl, avatarPublicId });
 
       return { avatarUrl, avatarPublicId };
