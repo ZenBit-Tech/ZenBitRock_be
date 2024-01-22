@@ -46,7 +46,8 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     this.logger.log('Gateway initialized');
     server.use((socket: SocketWithAuth, next) => {
       try {
-        const token = socket.handshake.auth.token || socket.handshake.headers.token;
+        const token =
+          socket.handshake.auth.token || socket.handshake.headers.token;
 
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
 
@@ -69,9 +70,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   async handleConnection(client: SocketWithAuth): Promise<void> {
     client.join(client.userId);
     const chatList = await this.userService.getChatsByUser(client.userId);
-    chatList.forEach((chat) => {
-      client.join(chat.id);
-    });
+    if (chatList) {
+      chatList.forEach((chat) => {
+        client.join(chat.id);
+      });
+    }
   }
 
   async addToRoom(userId: string, chatId: string): Promise<void> {
@@ -129,8 +132,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
-  async getAllChats(@MessageBody() data:ChatsByUserDto):
-   Promise<Chat[]> {
+  async getAllChats(@MessageBody() data: ChatsByUserDto): Promise<Chat[]> {
     try {
       const chats = await this.userService.getChatsByUserWithMessages(data);
       return chats;
