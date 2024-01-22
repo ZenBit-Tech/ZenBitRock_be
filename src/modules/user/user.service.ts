@@ -59,7 +59,7 @@ export class UserService {
         receiveNotifications: true,
       });
 
-      const token = this.jwtService.sign({ email: createUserDto.email });
+      const token = this.jwtService.sign({ email: user.email, id: user.id });
       return {
         user: {
           email: user.email,
@@ -245,8 +245,6 @@ export class UserService {
         { owner: { id: user.id } },
         { content: '' },
       );
-
-      throw new HttpException('User deleted successfully', HttpStatus.OK);
     } catch (error) {
       throw error;
     }
