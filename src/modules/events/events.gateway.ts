@@ -151,7 +151,6 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       const { userId } = client;
       const unreadCount = await this.messageService.getUnreadCount(userId);
 
-      // client.emit('unreadCount', unreadCount);
       return unreadCount;
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
@@ -172,7 +171,6 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         chatId,
       );
 
-      // client.emit('unreadCountByChatId', unreadCount);
       return unreadCount;
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
