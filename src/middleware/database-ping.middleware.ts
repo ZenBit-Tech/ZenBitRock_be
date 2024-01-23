@@ -1,9 +1,7 @@
 import { Inject, Injectable, NestMiddleware, forwardRef } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
 import { UserService } from 'src/modules/user/user.service';
-
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 400;
 
 @Injectable()
 export class DatabasePingMiddleware implements NestMiddleware {
