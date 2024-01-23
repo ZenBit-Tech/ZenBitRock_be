@@ -58,7 +58,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         const token =
           socket.handshake.auth.token || socket.handshake.headers.token;
 
-        this.pingDb();
+        await this.pingDb();
 
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
 
@@ -140,6 +140,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
+    await this.pingDb();
     return await this.messageService.getMessages(chatId);
   }
 
