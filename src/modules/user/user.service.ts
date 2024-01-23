@@ -364,34 +364,25 @@ export class UserService {
 
   async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string):
     Promise<Chat[]> {
-    const { page, limit, sortType } = data;
+    const { page, limit, sortType, searchParam } = data;
 
     try {
-      let sortMethod: string;
+      const sortMethod: 'ASC' | 'DESC' = sortType === 'oldest' ? 'ASC' : 'DESC';
 
-      switch (sortType) {
-        case 'oldest':
-          sortMethod = 'ASC';
-          break;
-        case 'latest':
-          sortMethod = 'DESC';
-          break;
-        default:
-          sortMethod = 'DESC';
-          break;
-      }
-
-      const [chats, count] = await this.chatRepository
+      const queryBuilder = this.chatRepository
         .createQueryBuilder('chat')
         .leftJoinAndSelect('chat.messages', 'message')
         .leftJoinAndSelect('chat.members', 'members')
         .leftJoinAndSelect('message.owner', 'owner')
         .where('members.id = :userId', { userId })
-        .leftJoinAndSelect('chat.members', 'allMembers')
-        .orderBy('chat.updatedAt', sortMethod as 'ASC' | 'DESC')
+        .andWhere('(chat.isPrivate = false AND chat.title LIKE :searchParam) OR (chat.isPrivate = false AND (members.firstName LIKE :searchParam OR members.lastName LIKE :searchParam)) OR (chat.isPrivate = true AND (members.firstName LIKE :searchParam OR members.lastName LIKE :searchParam))', {
+          searchParam: `%${searchParam}%`,
+        })
+        .orderBy('chat.updatedAt', sortMethod)
         .skip((page - 1) * limit)
-        .take(limit)
-        .getManyAndCount();
+        .take(limit);
+
+      const [chats, count] = await queryBuilder.getManyAndCount();
 
       if (!chats) throw new NotFoundException('Chats not found');
 
