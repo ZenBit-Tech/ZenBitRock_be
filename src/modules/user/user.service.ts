@@ -362,45 +362,18 @@ export class UserService {
     }
   }
 
-  async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string):
-    Promise<Chat[]> {
-    const { page, limit, sortType, searchParam } = data;
-
+  async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string): Promise<Chat[]> {
     try {
-      const sortMethod: 'ASC' | 'DESC' = sortType === 'oldest' ? 'ASC' : 'DESC';
-
-      const queryBuilder = this.chatRepository
+      const chats = await this.chatRepository
         .createQueryBuilder('chat')
         .leftJoinAndSelect('chat.messages', 'message')
         .leftJoinAndSelect('chat.members', 'members')
         .leftJoinAndSelect('message.owner', 'owner')
         .where('members.id = :userId', { userId })
-        .andWhere('(chat.isPrivate = false AND chat.title LIKE :searchParam) OR (chat.isPrivate = false AND (members.firstName LIKE :searchParam OR members.lastName LIKE :searchParam)) OR (chat.isPrivate = true AND (members.firstName LIKE :searchParam OR members.lastName LIKE :searchParam))', {
-          searchParam: `%${searchParam}%`,
-        })
-        .orderBy('chat.updatedAt', sortMethod)
-        .skip((page - 1) * limit)
-        .take(limit);
-
-      const [chats, count] = await queryBuilder.getManyAndCount();
+        .leftJoinAndSelect('chat.members', 'allMembers')
+        .getMany();
 
       if (!chats) throw new NotFoundException('Chats not found');
-
-      const pageCount = Math.ceil(count / limit);
-
-      const pagination: Pagination = {
-        page_count: pageCount,
-        current_page: page,
-        has_next_page: page < pageCount,
-        has_prev_page: page > 1,
-        count,
-        limit,
-      };
-
-      const chatsData: GetChatsByUserWithMessages = {
-        data: chats,
-        pagination,
-      };
 
       return chats;
     } catch (error) {
