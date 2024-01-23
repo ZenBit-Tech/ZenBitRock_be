@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayInit,
@@ -124,7 +125,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(
-    client: SocketWithAuth,
+    @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() { chatId }: { chatId: string },
   ): Promise<MessageResponse[]> {
     const { userId } = client;
