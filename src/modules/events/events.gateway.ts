@@ -1,6 +1,11 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable import/no-cycle */
-import { Inject, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   MessageBody,
@@ -21,6 +26,7 @@ import { UserService } from 'modules/user/user.service';
 import { Chat } from 'src/common/entities/chat.entity';
 import { ChatEvent } from 'src/common/enums';
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
+import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
 import { MessageResponse } from 'src/common/types/message/message.type';
 
 @WebSocketGateway({ cors: { origin: '*' } })
@@ -44,10 +50,13 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   afterInit(server: Server): void {
     this.logger.log('Gateway initialized');
-    server.use((socket: SocketWithAuth, next) => {
+
+    server.use(async (socket: SocketWithAuth, next) => {
       try {
         const token =
           socket.handshake.auth.token || socket.handshake.headers.token;
+
+        this.pingDb();
 
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
 
@@ -57,8 +66,18 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
           next(new UnauthorizedException('Invalid credentials'));
         }
 
+        const user = await this.userService.findOneById(id);
+
+        if (!user) {
+          next(new BadRequestException("User doesn't exist!"));
+        }
+
         socket.userId = id;
         socket.userEmail = email;
+
+        socket.prependAny(() => {
+          this.pingDb();
+        });
 
         next();
       } catch (error) {
@@ -75,11 +94,32 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         client.join(chat.id);
       });
     }
+    if (chatList) {
+      chatList.forEach((chat) => {
+        client.join(chat.id);
+      });
+    }
   }
 
   async addToRoom(userId: string, chatId: string): Promise<void> {
     const sockets = await this.server.in(userId).fetchSockets();
     sockets.forEach((socket) => socket.join(chatId));
+  }
+
+  async pingDb(): Promise<void> {
+    let attemptCount = 0;
+    let isRetrySuccessful = false;
+
+    while (attemptCount < MAX_RETRIES && !isRetrySuccessful) {
+      try {
+        await this.userService.findOne('ping');
+        isRetrySuccessful = true;
+      } catch (error) {
+        console.error(error);
+        attemptCount++;
+        await new Promise((res) => setTimeout(res, RETRY_DELAY));
+      }
+    }
   }
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)

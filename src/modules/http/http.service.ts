@@ -31,7 +31,20 @@ export class HTTPService {
       await lastValueFrom(this.httpService.get(url));
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response && error.response.status === 404) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async checkUserExistsInCRM(userId: string): Promise<boolean> {
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    const url = `${baseUrl}/users/${userId}`;
+    try {
+      await lastValueFrom(this.httpService.get(url));
+      return true;
+    } catch (error) {
       if (error.response && error.response.status === 404) {
         return false;
       }
@@ -74,6 +87,26 @@ export class HTTPService {
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'Deleting contact from CRM failed',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteUserFromCRM(userId: string): Promise<void> {
+    const userExists = await this.checkUserExistsInCRM(userId);
+    if (!userExists) {
+      return;
+    }
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    const url = `${baseUrl}/users/${userId}`;
+    try {
+      await lastValueFrom(this.httpService.delete(url));
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Deleting user from CRM failed',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
