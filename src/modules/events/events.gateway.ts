@@ -75,8 +75,8 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         socket.userId = id;
         socket.userEmail = email;
 
-        socket.prependAny(() => {
-          this.pingDb();
+        socket.prependAny(async () => {
+          await this.pingDb();
         });
 
         next();
@@ -162,7 +162,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         client.emit('errorMessage', { message: 'Not a chat  member' });
       }
     } catch (error) {
-      client.emit('errorMessage', { message: 'An error occurred' });
+      client.emit('errorMessage', {
+        message: `An error occurred ${error ? error : ''}`,
+      });
     }
   }
 
