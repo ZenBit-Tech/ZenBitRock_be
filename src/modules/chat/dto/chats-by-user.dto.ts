@@ -1,13 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 export class ChatsByUserDto {
   @ApiProperty({
-    example: '3f9694ae-3241-48ef-b16b-32dc7d23e1d9',
-    description: 'User id',
+    example: '1',
+    description: 'Page number',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  page: number;
+
+  @ApiProperty({
+    example: '100',
+    description: 'Limit count of chats',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  limit: number;
+
+  @ApiProperty({
+    example: 'lastMessageTimeASC',
+    description: 'Type of sorting chats',
   })
   @IsNotEmpty()
   @IsString()
-  userId: string;
+  sortType: string;
+
+  @ApiProperty({
+    example: 'David',
+    description: 'Name of chat member',
+  })
+  @IsNotEmpty()
+  @IsString()
+  searchParam: string;
 }

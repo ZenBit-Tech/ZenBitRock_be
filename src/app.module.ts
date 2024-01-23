@@ -54,7 +54,7 @@ import { ContentModule } from './modules/content/content.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 7,
+        limit: 15,
       },
     ]),
   ],

@@ -18,6 +18,8 @@ import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import { Message } from 'src/common/entities/message.entity';
 import {
+  GetChatsByUserWithMessages,
+  Pagination,
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
@@ -358,8 +360,7 @@ export class UserService {
     }
   }
 
-  async getChatsByUserWithMessages(data: ChatsByUserDto): Promise<Chat[]> {
-    const { userId } = data;
+  async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string): Promise<Chat[]> {
     try {
       const chats = await this.chatRepository
         .createQueryBuilder('chat')

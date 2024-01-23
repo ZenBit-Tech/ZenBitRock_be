@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable import/no-cycle */
 import {
@@ -193,10 +194,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
-  async getAllChats(@MessageBody() data: ChatsByUserDto): Promise<Chat[]> {
+  async getAllChats(client: SocketWithAuth, data: ChatsByUserDto):
+    Promise<Chat[]> {
     try {
-      const chats = await this.userService.getChatsByUserWithMessages(data);
-      return chats;
+      const { userId } = client;
+      return await this.userService.getChatsByUserWithMessages(data, userId);
     } catch (error) {
       throw error;
     }

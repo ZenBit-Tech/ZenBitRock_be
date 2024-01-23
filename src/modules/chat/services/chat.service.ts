@@ -16,6 +16,7 @@ import { EventsGateway } from 'src/modules/events/events.gateway';
 
 import { CreateChatDto } from '../dto/create-chat.dto';
 import { UpdateChatDto } from '../dto/update-chat.dto';
+import { ChatEvent } from 'src/common/enums';
 
 @Injectable()
 export class ChatService {
@@ -70,6 +71,9 @@ export class ChatService {
         async (member) =>
           await this.eventsGateway.addToRoom(member.id, chat.id),
       );
+
+      this.eventsGateway.server.emit(ChatEvent.NewChat, chat.id);
+
       return { chat };
     } catch (error) {
       throw error;
@@ -103,6 +107,9 @@ export class ChatService {
       if (!deleteChat.affected) {
         throw new NotFoundException('Chat not found');
       }
+
+      this.eventsGateway.server.to(id).emit(ChatEvent.ChatDeleted, id);
+
       throw new HttpException('Chat deleted successfully', HttpStatus.OK);
     } catch (error) {
       throw error;
@@ -136,7 +143,9 @@ export class ChatService {
         chat.title = chatData.title;
       }
 
-      await this.chatRepository.save(chat);
+      const { id: chatId } = await this.chatRepository.save(chat);
+
+      this.eventsGateway.server.to(chatId).emit(ChatEvent.ChatUpdated, chatId);
 
       return await this.chatRepository.findOne({ where: { id } });
     } catch (error) {
