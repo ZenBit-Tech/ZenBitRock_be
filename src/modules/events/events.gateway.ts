@@ -84,9 +84,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(
-    @MessageBody() { chatId, id }: { chatId: string; id: string },
+    client: SocketWithAuth,
+    @MessageBody() { chatId }: { chatId: string },
   ): Promise<MessageResponse[]> {
-    return this.messageService.getMessages(chatId, id);
+    const { userId } = client;
+    return this.messageService.getMessages(chatId, userId);
   }
 
   @SubscribeMessage('join')
@@ -144,12 +146,13 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestUnreadMessagesCount)
-  async getUnreadCount(client: SocketWithAuth): Promise<void> {
+  async getUnreadCount(client: SocketWithAuth): Promise<number> {
     try {
       const { userId } = client;
       const unreadCount = await this.messageService.getUnreadCount(userId);
 
-      client.emit('unreadCount', unreadCount);
+      // client.emit('unreadCount', unreadCount);
+      return unreadCount;
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
@@ -159,7 +162,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   async getUnreadCountByChatId(
     client: SocketWithAuth,
     data: { chatId: string },
-  ): Promise<void> {
+  ): Promise<number> {
     try {
       const { userId } = client;
       const { chatId } = data;
@@ -169,7 +172,8 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         chatId,
       );
 
-      client.emit('unreadCountByChatId', unreadCount);
+      // client.emit('unreadCountByChatId', unreadCount);
+      return unreadCount;
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
@@ -182,11 +186,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   ): Promise<void> {
     try {
       const { userId } = client;
-      const { messageId, chatId } = data;
+      const { messageId } = data;
 
-      console.log(data);
-      console.log(userId);
-      await this.messageService.markMessageAsRead(messageId, userId, chatId);
+      await this.messageService.markMessageAsRead(messageId, userId);
 
       const unreadCount = await this.messageService.getUnreadCount(userId);
       client.emit('unreadCount', unreadCount);

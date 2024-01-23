@@ -21,7 +21,10 @@ export class MessageService {
     private readonly chatRepository: Repository<Chat>,
   ) {}
 
-  async getMessages(chatId: string, id: string): Promise<MessageResponse[]> {
+  async getMessages(
+    chatId: string,
+    userId: string,
+  ): Promise<MessageResponse[]> {
     try {
       const messages = await this.messageRepository
         .createQueryBuilder('message')
@@ -42,7 +45,7 @@ export class MessageService {
         isRead:
           !message.readers && message.readers.length === 0
             ? false
-            : message.readers.some((reader) => reader.user.id === id),
+            : message.readers.some((reader) => reader.user.id === userId),
       }));
       return response;
     } catch (error) {
@@ -64,6 +67,7 @@ export class MessageService {
       const newMessage = await this.messageRepository.save(message);
 
       await this.updateChatUpdatedAt(createMessageDto.chatId);
+      await this.markMessageAsRead(newMessage.id, userId);
 
       return await this.messageRepository.findOne({
         where: { id: newMessage.id },
@@ -96,7 +100,7 @@ export class MessageService {
         })
         .where('reader.id IS NULL')
         .getCount();
-      console.log(unreadCount);
+
       return unreadCount;
     } catch (error) {
       throw new Error('Failed to fetch unread message count');
@@ -120,29 +124,20 @@ export class MessageService {
         .andWhere('message.chat = :chatId', { chatId })
         .andWhere('reader.id IS NULL')
         .getCount();
-      console.log(unreadCount);
+
       return unreadCount;
     } catch (error) {
       throw new Error('Failed to fetch unread message count by chat');
     }
   }
 
-  async markMessageAsRead(
-    messageId: string,
-    userId: string,
-    chatId: string,
-  ): Promise<void> {
+  async markMessageAsRead(messageId: string, userId: string): Promise<void> {
     try {
-      console.log(messageId);
-      console.log(chatId);
-
-      console.log(userId);
-
       const message = await this.messageRepository.findOne({
         where: { id: messageId },
         relations: ['readers', 'chat', 'readers.user'],
       });
-      console.log(message);
+
       if (!message) {
         throw new NotFoundException('Message not found');
       }
