@@ -32,6 +32,8 @@ import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(EventsGateway.name);
+  private queue: (() => void)[] = [];
+  private isQueueRunning: boolean = false;
 
   @Inject()
   private jwtService: JwtService;
@@ -76,7 +78,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         socket.userEmail = email;
 
         socket.prependAny(async () => {
-          await this.pingDb();
+          await this.handleSocketEvent(this.pingDb);
           socket.emit('db_pinged');
         });
 
@@ -85,6 +87,24 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         next(error);
       }
     });
+  }
+
+  async handleQueue(handler: () => Promise<void>) {
+    this.isQueueRunning = true;
+    await handler();
+
+    while (this.queue.length > 0) {
+      this.queue.shift()();
+    }
+    this.isQueueRunning = false;
+  }
+
+  async handleSocketEvent(handler: () => Promise<void>) {
+    if (!this.isQueueRunning) {
+      this.handleQueue(handler);
+    } else {
+      this.queue.push(handler);
+    }
   }
 
   async handleConnection(client: SocketWithAuth): Promise<void> {
@@ -144,29 +164,31 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     client: SocketWithAuth,
     createMessageDto: CreateMessageDto,
   ): Promise<void> {
-    try {
-      const { userId } = client;
+    await this.handleSocketEvent(async () => {
+      try {
+        const { userId } = client;
 
-      const isMember = await this.chatService.checkUserisChatMember(
-        createMessageDto.chatId,
-        userId,
-      );
-
-      if (isMember) {
-        const message = await this.messageService.createMessage(
-          createMessageDto,
+        const isMember = await this.chatService.checkUserisChatMember(
+          createMessageDto.chatId,
           userId,
         );
 
-        this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
-      } else {
-        client.emit('errorMessage', { message: 'Not a chat  member' });
+        if (isMember) {
+          const message = await this.messageService.createMessage(
+            createMessageDto,
+            userId,
+          );
+
+          this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+        } else {
+          client.emit('errorMessage', { message: 'Not a chat  member' });
+        }
+      } catch (error) {
+        client.emit('errorMessage', {
+          message: `An error occurred ${error ? error : ''}`,
+        });
       }
-    } catch (error) {
-      client.emit('errorMessage', {
-        message: `An error occurred ${error ? error : ''}`,
-      });
-    }
+    });
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
