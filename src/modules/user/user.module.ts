@@ -28,6 +28,6 @@ import { HTTPService } from '../http/http.service';
   ],
   controllers: [UserController],
   providers: [UserService, CloudinaryService, ConfigService, HTTPService],
-  exports: [UserService],
+  exports: [UserService, HTTPService],
 })
 export class UserModule {}

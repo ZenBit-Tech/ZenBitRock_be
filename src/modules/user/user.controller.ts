@@ -98,6 +98,20 @@ export class UserController {
     }
   }
 
+  @Get('/get-synchronized-users')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get users synchronized with CRM' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async getSynchronizedUsers(): Promise<User[]> {
+    try {
+      return await this.userService.getSynchronizedUsers();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Patch('/update')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

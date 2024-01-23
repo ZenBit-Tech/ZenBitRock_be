@@ -6,6 +6,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { User } from 'src/common/entities/user.entity';
 import { UserInfoResponse } from 'src/common/types';
+import { HTTPService } from 'src/modules/http/http.service';
 import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private userService: UserService,
+    private httpService: HTTPService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -24,6 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(user: User): Promise<UserInfoResponse> {
     try {
       const userDetails = await this.userService.findOne(user.email);
+
+      await this.userService.verifyAndDeleteUserIfNeeded(user);
 
       return {
         email: userDetails.email,
