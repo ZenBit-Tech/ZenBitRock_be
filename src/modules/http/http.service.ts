@@ -125,6 +125,9 @@ export class HTTPService {
 
   async getAllOpportunities(association: string, id: string): Promise<any[]> {
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    if (!id) {
+      return;
+    }
     const url = `${baseUrl}/opportunities/related-with/${association}/${id}`;
     try {
       const response = await lastValueFrom(this.httpService.get(url));

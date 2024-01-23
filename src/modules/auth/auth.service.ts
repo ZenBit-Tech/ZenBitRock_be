@@ -46,21 +46,7 @@ export class AuthService {
 
   async login(user: User): Promise<UserSignInResponse> {
     try {
-      if (user.qobrixContactId || user.qobrixAgentId || user.qobrixUserId) {
-        const contactExists = await this.httpService.checkContactExistsInCRM(
-          user.qobrixContactId,
-        );
-        const agentExists = await this.httpService.checkAgentExistsInCRM(
-          user.qobrixAgentId,
-        );
-        const userExists = await this.httpService.checkUserExistsInCRM(
-          user.qobrixUserId,
-        );
-
-        if (!contactExists || !agentExists || !userExists) {
-          await this.userService.deleteAccount(user.id);
-        }
-      }
+      await this.userService.verifyAndDeleteUserIfNeeded(user);
 
       return {
         user: {

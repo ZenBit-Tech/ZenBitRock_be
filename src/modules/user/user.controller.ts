@@ -98,15 +98,15 @@ export class UserController {
     }
   }
 
-  @Delete('/remove-unsynchronized-users')
+  @Get('/get-synchronized-users')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Remove users without a CRM contact' })
-  @ApiResponse({ status: 200, description: 'Users removed successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  async removeUsersWithoutCRMContact(): Promise<void> {
+  @ApiOperation({ summary: 'Get users synchronized with CRM' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async getSynchronizedUsers(): Promise<User[]> {
     try {
-      await this.userService.removeUsersWithoutCRMContact();
+      return await this.userService.getSynchronizedUsers();
     } catch (error) {
       throw error;
     }

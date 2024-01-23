@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as argon2 from 'argon2';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository, UpdateResult, In } from 'typeorm';
 
 import { ChatsByUserDto } from 'modules/chat/dto/chats-by-user.dto';
 import { CloudinaryService } from 'modules/cloudinary/cloudinary.service';
@@ -235,7 +235,7 @@ export class UserService {
       const user = await this.userRepository.findOne({ where: { id } });
 
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException(`User not found in delete ${id}`);
       }
 
       const anonymizedUserData = this.anonymizeUser(user);
@@ -262,7 +262,7 @@ export class UserService {
       });
 
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException(`User not found in deleteAccount ${id}`);
       }
 
       const { qobrixAgentId, qobrixContactId, qobrixUserId } = user;
@@ -287,7 +287,9 @@ export class UserService {
       const user = await this.userRepository.findOne({ where: { id: userId } });
 
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException(
+          `User not found in update user data ${userId}`,
+        );
       }
 
       await this.userRepository.update(userId, updatedFields);
@@ -381,19 +383,46 @@ export class UserService {
     }
   }
 
-  async removeUsersWithoutCRMContact(): Promise<void> {
-    const users = await this.userRepository.find({
-      where: { isDeleted: false },
-    });
+  async verifyAndDeleteUserIfNeeded(user: User): Promise<void> {
+    if (user.qobrixContactId || user.qobrixAgentId || user.qobrixUserId) {
+      const contactExists = await this.httpService.checkContactExistsInCRM(
+        user.qobrixContactId,
+      );
+      const agentExists = await this.httpService.checkAgentExistsInCRM(
+        user.qobrixAgentId,
+      );
+      const userExists = await this.httpService.checkUserExistsInCRM(
+        user.qobrixUserId,
+      );
 
-    const promises = users.map(async (user) => {
-      try {
+      if (!contactExists || !agentExists || !userExists) {
+        await this.deleteAccount(user.id);
+      }
+    }
+  }
+
+  async getSynchronizedUsers(): Promise<User[]> {
+    try {
+      const users = await this.userRepository.find({
+        where: { isDeleted: false },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+      if (!users) {
+        throw new NotFoundException('Not found');
+      }
+
+      const processedUserIds = [];
+
+      const promises = users.map(async (user) => {
         if (
-          !user.qobrixContactId ||
-          !user.qobrixAgentId ||
-          !user.qobrixUserId
+          (!user.qobrixContactId ||
+            !user.qobrixAgentId ||
+            !user.qobrixUserId) &&
+          user.id
         ) {
-          return;
+          await this.deleteAccount(user.id);
         }
         const contactExists = await this.httpService.checkContactExistsInCRM(
           user.qobrixContactId,
@@ -409,12 +438,23 @@ export class UserService {
 
         if (!contactExists || !agentExists || !userExists) {
           await this.deleteAccount(user.id);
+        } else {
+          processedUserIds.push(user.id);
         }
-      } catch (error) {
-        throw error;
-      }
-    });
+      });
 
-    await Promise.allSettled(promises);
+      await Promise.all(promises);
+
+      const res = await this.userRepository.find({
+        where: { id: In(processedUserIds) },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+      return res;
+    } catch (error) {
+      throw error;
+    }
   }
 }
