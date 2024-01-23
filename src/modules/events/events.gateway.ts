@@ -77,6 +77,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
         socket.prependAny(async () => {
           await this.pingDb();
+          socket.emit('db_pinged');
         });
 
         next();
