@@ -29,8 +29,10 @@ export class ContentController {
   @ApiOperation({ summary: 'Getting all content' })
   @ApiResponse({ status: 200, description: 'OK', type: Content, isArray: true })
   @ApiResponse({ status: 404, description: 'Not found' })
-  getAllContent(): Promise<ContentResponse[]> {
-    return this.contentService.getAllContent();
+  getAllContent(
+    @Request() req: { user: { id: string } },
+  ): Promise<ContentResponse[]> {
+    return this.contentService.getAllContent(req.user.id);
   }
 
   @Patch('/:id/change-status')

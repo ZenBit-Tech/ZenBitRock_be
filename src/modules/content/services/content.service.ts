@@ -20,7 +20,7 @@ export class ContentService {
     private readonly contentStatusRepository: Repository<ContentStatus>,
   ) {}
 
-  async getAllContent(): Promise<ContentResponse[]> {
+  async getAllContent(userId: string): Promise<ContentResponse[]> {
     try {
       const contents: Content[] = await this.contentRepository.find({
         relations: ['contentStatuses'],
@@ -35,7 +35,13 @@ export class ContentService {
         screenshot: content.screenshot,
         checked:
           content.contentStatuses.length > 0 &&
-          content.contentStatuses[0].checked,
+          content.contentStatuses.filter(
+            (contentStatus) => contentStatus.user.id === userId,
+          ).length > 0
+            ? content.contentStatuses.filter(
+                (contentStatus) => contentStatus.user.id === userId,
+              )[0].checked
+            : false,
       }));
 
       return response;

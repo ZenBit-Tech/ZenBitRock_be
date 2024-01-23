@@ -14,12 +14,14 @@ import { UserProfileResponse, UserSignInResponse } from 'src/common/types';
 import { User } from 'src/common/entities/user.entity';
 
 import { UserService } from '../user/user.service';
+import { HTTPService } from '../http/http.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
+    private httpService: HTTPService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -44,6 +46,8 @@ export class AuthService {
 
   async login(user: User): Promise<UserSignInResponse> {
     try {
+      await this.userService.verifyAndDeleteUserIfNeeded(user);
+
       return {
         user: {
           email: user.email,

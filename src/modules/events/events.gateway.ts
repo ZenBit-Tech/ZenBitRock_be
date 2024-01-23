@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable import/no-cycle */
 import {
@@ -33,6 +34,8 @@ import { MessageResponse } from 'src/common/types/message/message.type';
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(EventsGateway.name);
+  private queue: (() => void)[] = [];
+  private isQueueRunning: boolean = false;
 
   @Inject()
   private jwtService: JwtService;
@@ -57,7 +60,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         const token =
           socket.handshake.auth.token || socket.handshake.headers.token;
 
-        this.pingDb();
+        await this.pingDb();
 
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
 
@@ -76,8 +79,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         socket.userId = id;
         socket.userEmail = email;
 
-        socket.prependAny(() => {
-          this.pingDb();
+        socket.prependAny(async () => {
+          await this.handleSocketEvent(this.pingDb.bind(this));
+          socket.emit('db_pinged');
         });
 
         next();
@@ -85,6 +89,24 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         next(error);
       }
     });
+  }
+
+  async handleQueue(handler: () => Promise<void>) {
+    this.isQueueRunning = true;
+    await handler();
+
+    while (this.queue.length > 0) {
+      this.queue.shift()();
+    }
+    this.isQueueRunning = false;
+  }
+
+  async handleSocketEvent(handler: () => Promise<void>) {
+    if (!this.isQueueRunning) {
+      this.handleQueue(handler);
+    } else {
+      this.queue.push(handler);
+    }
   }
 
   async handleConnection(client: SocketWithAuth): Promise<void> {
@@ -128,8 +150,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() { chatId }: { chatId: string },
   ): Promise<MessageResponse[]> {
+    await this.pingDb();
     const { userId } = client;
-    return this.messageService.getMessages(chatId, userId);
+    return await this.messageService.getMessages(chatId, userId);
   }
 
   @SubscribeMessage('join')
@@ -153,34 +176,41 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     client: SocketWithAuth,
     createMessageDto: CreateMessageDto,
   ): Promise<void> {
-    try {
-      const { userId } = client;
+    await this.handleSocketEvent(async () => {
+      try {
+        const { userId } = client;
 
-      const isMember = await this.chatService.checkUserisChatMember(
-        createMessageDto.chatId,
-        userId,
-      );
-
-      if (isMember) {
-        const message = await this.messageService.createMessage(
-          createMessageDto,
+        const isMember = await this.chatService.checkUserisChatMember(
+          createMessageDto.chatId,
           userId,
         );
 
-        this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
-      } else {
-        client.emit('errorMessage', { message: 'Not a chat  member' });
+        if (isMember) {
+          const message = await this.messageService.createMessage(
+            createMessageDto,
+            userId,
+          );
+
+          this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+        } else {
+          client.emit('errorMessage', { message: 'Not a chat  member' });
+        }
+      } catch (error) {
+        client.emit('errorMessage', {
+          message: `An error occurred ${error ? error : ''}`,
+        });
       }
-    } catch (error) {
-      client.emit('errorMessage', { message: 'An error occurred' });
-    }
+    });
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
-  async getAllChats(@MessageBody() data: ChatsByUserDto): Promise<Chat[]> {
+  async getAllChats(
+    client: SocketWithAuth,
+    data: ChatsByUserDto,
+  ): Promise<Chat[]> {
     try {
-      const chats = await this.userService.getChatsByUserWithMessages(data);
-      return chats;
+      const { userId } = client;
+      return await this.userService.getChatsByUserWithMessages(data, userId);
     } catch (error) {
       throw error;
     }
