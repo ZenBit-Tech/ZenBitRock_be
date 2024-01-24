@@ -67,11 +67,10 @@ export class MessageService {
       const newMessage = await this.messageRepository.save(message);
 
       await this.updateChatUpdatedAt(createMessageDto.chatId);
-      await this.markMessageAsRead(newMessage.id, userId);
 
       return await this.messageRepository.findOne({
         where: { id: newMessage.id },
-        relations: ['owner', 'chat'],
+        relations: ['owner', 'chat', 'chat.members'],
       });
     } catch (error) {
       throw new Error('Failed to create message');
@@ -131,11 +130,14 @@ export class MessageService {
     }
   }
 
-  async markMessageAsRead(messageId: string, userId: string): Promise<void> {
+  async markMessageAsRead(
+    messageId: string,
+    userId: string,
+  ): Promise<string[]> {
     try {
       const message = await this.messageRepository.findOne({
         where: { id: messageId },
-        relations: ['readers', 'chat', 'readers.user'],
+        relations: ['readers', 'chat', 'chat.members', 'readers.user'],
       });
 
       if (!message) {
@@ -163,6 +165,18 @@ export class MessageService {
         message.readers.push(reader);
 
         await this.messageRepository.save(message);
+
+        const chats = await this.chatRepository.find({
+          where: { id: message.chat.id },
+          relations: ['members'],
+        });
+
+        const userIds = chats.reduce((allUserIds, chat) => {
+          allUserIds.push(...chat.members.map((member) => member.id));
+          return allUserIds;
+        }, []);
+
+        return Array.from(new Set(userIds));
       }
     } catch (error) {
       throw new Error(`Failed to mark message as read: ${error.message}`);

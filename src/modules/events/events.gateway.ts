@@ -192,6 +192,16 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
           );
 
           this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+
+          const userIds = Array.from(
+            new Set(message.chat.members.map((user) => user.id)),
+          );
+
+          userIds.forEach((id) =>
+            this.server
+              .to(id)
+              .emit(ChatEvent.RequestUnreadMessagesCountUpdated),
+          );
         } else {
           client.emit('errorMessage', { message: 'Not a chat  member' });
         }
@@ -231,12 +241,10 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(ChatEvent.RequestUnreadMessagesByIdCount)
   async getUnreadCountByChatId(
     client: SocketWithAuth,
-    data: { chatId: string },
+    chatId: string,
   ): Promise<number> {
     try {
       const { userId } = client;
-      const { chatId } = data;
-
       const unreadCount = await this.messageService.getUnreadCountByChatId(
         userId,
         chatId,
@@ -257,10 +265,15 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       const { userId } = client;
       const { messageId } = data;
 
-      await this.messageService.markMessageAsRead(messageId, userId);
+      const forUsers = await this.messageService.markMessageAsRead(
+        messageId,
+        userId,
+      );
+      forUsers.forEach((id) =>
+        this.server.to(id).emit(ChatEvent.RequestUnreadMessagesCountUpdated),
+      );
 
-      const unreadCount = await this.messageService.getUnreadCount(userId);
-      client.emit('unreadCount', unreadCount);
+      this.server.to(userId).emit(ChatEvent.RequestUnreadMessagesCountUpdated);
     } catch (error) {
       client.emit('errorMessage', { message: 'An error occurred' });
     }
