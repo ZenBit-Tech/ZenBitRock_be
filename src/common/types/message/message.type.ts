@@ -4,7 +4,7 @@ type MessageResponse = {
   createdAt: Date;
   content: string;
   owner: { id: string; firstName: string; lastName: string };
-  isRead: boolean;
+  isReadBy: { userId: string; isRead: boolean }[];
 };
 
 export { type MessageResponse };

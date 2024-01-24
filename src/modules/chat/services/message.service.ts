@@ -31,22 +31,31 @@ export class MessageService {
         .leftJoinAndSelect('message.owner', 'owner')
         .leftJoinAndSelect('message.readers', 'readers')
         .leftJoinAndSelect('readers.user', 'user')
+        .leftJoinAndSelect('message.chat', 'chat')
+        .leftJoinAndSelect('chat.members', 'members')
         .where('message.chat.id = :chatId', { chatId })
         .getMany();
-      const response: MessageResponse[] = messages.map((message) => ({
-        id: message.id,
-        createdAt: message.createdAt,
-        content: message.content,
-        owner: {
-          id: message.owner.id,
-          firstName: message.owner.firstName,
-          lastName: message.owner.lastName,
-        },
-        isRead:
-          !message.readers && message.readers.length === 0
-            ? false
-            : message.readers.some((reader) => reader.user.id === userId),
-      }));
+      const response: MessageResponse[] = messages.map((message) => {
+        const chatMembers = message.chat.members;
+        const isReadBy = chatMembers.map((member) => {
+          const isRead = message.readers.some(
+            (reader) => reader.user.id === member.id,
+          );
+          return { userId: member.id, isRead };
+        });
+
+        return {
+          id: message.id,
+          createdAt: message.createdAt,
+          content: message.content,
+          owner: {
+            id: message.owner.id,
+            firstName: message.owner.firstName,
+            lastName: message.owner.lastName,
+          },
+          isReadBy,
+        };
+      });
       return response;
     } catch (error) {
       throw new Error('Failed to fetch messages');
