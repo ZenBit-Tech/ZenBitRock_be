@@ -45,6 +45,7 @@ export class MessageService {
           id: message.id,
           createdAt: message.createdAt,
           content: message.content,
+          chat: message.chat,
           owner: {
             id: message.owner.id,
             firstName: message.owner.firstName,

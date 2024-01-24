@@ -1,6 +1,9 @@
+import { Chat } from 'src/common/entities/chat.entity';
+
 type MessageResponse = {
   id: string;
   chatId?: string;
+  chat?: Chat;
   createdAt: Date;
   content: string;
   owner: { id: string; firstName: string; lastName: string };
