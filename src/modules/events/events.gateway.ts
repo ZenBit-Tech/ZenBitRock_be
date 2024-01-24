@@ -147,12 +147,10 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(
-    @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() { chatId }: { chatId: string },
   ): Promise<MessageResponse[]> {
     await this.pingDb();
-    const { userId } = client;
-    return await this.messageService.getMessages(chatId, userId);
+    return await this.messageService.getMessages(chatId);
   }
 
   @SubscribeMessage('join')

@@ -29,13 +29,9 @@ export class MessageController {
   @ApiResponse({ status: 200, description: 'Return a list of messages' })
   async getMessages(
     @Query() getMessagesDto: MessageResponse,
-    @Request() req: { user: { id: string } },
   ): Promise<MessageResponse[]> {
     try {
-      return await this.messageService.getMessages(
-        getMessagesDto.chatId,
-        req.user.id,
-      );
+      return await this.messageService.getMessages(getMessagesDto.chatId);
     } catch (error) {
       throw new Error('Failed to get messages');
     }

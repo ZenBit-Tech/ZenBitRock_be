@@ -21,10 +21,7 @@ export class MessageService {
     private readonly chatRepository: Repository<Chat>,
   ) {}
 
-  async getMessages(
-    chatId: string,
-    userId: string,
-  ): Promise<MessageResponse[]> {
+  async getMessages(chatId: string): Promise<MessageResponse[]> {
     try {
       const messages = await this.messageRepository
         .createQueryBuilder('message')
