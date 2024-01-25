@@ -38,7 +38,11 @@ export class MessageService {
           const isRead = message.readers.some(
             (reader) => reader.user.id === member.id,
           );
-          return { userId: member.id, isRead };
+          return {
+            messageId: message.id,
+            userId: member.id,
+            isRead: isRead || false,
+          };
         });
 
         return {
@@ -74,6 +78,7 @@ export class MessageService {
       const newMessage = await this.messageRepository.save(message);
 
       await this.updateChatUpdatedAt(createMessageDto.chatId);
+      await this.markMessageAsRead(newMessage.id, userId);
 
       return await this.messageRepository.findOne({
         where: { id: newMessage.id },
