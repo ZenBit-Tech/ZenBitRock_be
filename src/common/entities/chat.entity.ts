@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import {
   Column,
   Entity,
@@ -6,9 +7,10 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
+
+import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
-import { CoreEntity } from './core.entity';
 
 @Entity()
 export class Chat extends CoreEntity {

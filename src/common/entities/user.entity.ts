@@ -1,6 +1,8 @@
 /* eslint-disable import/no-cycle */
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
+import { ChatMessageReader } from 'common/entities/chatMessageReader.entity';
+
 import { Chat } from './chat.entity';
 import { Content } from './content.entity';
 import { ContentStatus } from './contentStatus.entity';
@@ -110,4 +112,7 @@ export class User extends CoreEntity {
 
   @OneToMany(() => ContentStatus, (contentStatus) => contentStatus.user)
   contentStatuses: ContentStatus[];
+
+  @OneToMany(() => ChatMessageReader, (reader) => reader.user)
+  readMessages: ChatMessageReader[];
 }

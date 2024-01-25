@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayInit,
@@ -25,10 +26,10 @@ import { ChatService } from 'modules/chat/services/chat.service';
 import { MessageService } from 'modules/chat/services/message.service';
 import { UserService } from 'modules/user/user.service';
 import { Chat } from 'src/common/entities/chat.entity';
-import { Message } from 'src/common/entities/message.entity';
 import { ChatEvent } from 'src/common/enums';
 import { SocketWithAuth, TokenPayload } from 'src/common/types';
 import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
+import { MessageResponse } from 'src/common/types/message/message.type';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
@@ -116,6 +117,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         client.join(chat.id);
       });
     }
+    if (chatList) {
+      chatList.forEach((chat) => {
+        client.join(chat.id);
+      });
+    }
   }
 
   async addToRoom(userId: string, chatId: string): Promise<void> {
@@ -140,7 +146,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
-  async getAllMessages(@MessageBody() chatId: string): Promise<Message[]> {
+  async getAllMessages(
+    @MessageBody() { chatId }: { chatId: string },
+  ): Promise<MessageResponse[]> {
     await this.pingDb();
     return await this.messageService.getMessages(chatId);
   }
@@ -182,6 +190,16 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
           );
 
           this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+
+          const userIds = Array.from(
+            new Set(message.chat.members.map((user) => user.id)),
+          );
+
+          userIds.forEach((id) =>
+            this.server
+              .to(id)
+              .emit(ChatEvent.RequestUnreadMessagesCountUpdated),
+          );
         } else {
           client.emit('errorMessage', { message: 'Not a chat  member' });
         }
@@ -194,8 +212,10 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
-  async getAllChats(client: SocketWithAuth, data: ChatsByUserDto):
-    Promise<Chat[]> {
+  async getAllChats(
+    client: SocketWithAuth,
+    data: ChatsByUserDto,
+  ): Promise<Chat[]> {
     try {
       const { userId } = client;
       return await this.userService.getChatsByUserWithMessages(data, userId);
@@ -203,5 +223,59 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       throw error;
     }
   }
+
+  @SubscribeMessage(ChatEvent.RequestUnreadMessagesCount)
+  async getUnreadCount(client: SocketWithAuth): Promise<number> {
+    try {
+      const { userId } = client;
+      const unreadCount = await this.messageService.getUnreadCount(userId);
+
+      return unreadCount;
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
+  }
+
+  @SubscribeMessage(ChatEvent.RequestUnreadMessagesByIdCount)
+  async getUnreadCountByChatId(
+    client: SocketWithAuth,
+    chatId: string,
+  ): Promise<number> {
+    try {
+      const { userId } = client;
+      const unreadCount = await this.messageService.getUnreadCountByChatId(
+        userId,
+        chatId,
+      );
+
+      return unreadCount;
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
+  }
+
+  @SubscribeMessage(ChatEvent.RequestMarkAsRead)
+  async markMessagesAsRead(
+    client: SocketWithAuth,
+    data: { messageId: string; chatId: string },
+  ): Promise<void> {
+    try {
+      const { userId } = client;
+      const { messageId } = data;
+
+      const forUsers = await this.messageService.markMessageAsRead(
+        messageId,
+        userId,
+      );
+      forUsers.forEach((id) =>
+        this.server.to(id).emit(ChatEvent.RequestUnreadMessagesCountUpdated),
+      );
+
+      this.server.to(userId).emit(ChatEvent.RequestUnreadMessagesCountUpdated);
+    } catch (error) {
+      client.emit('errorMessage', { message: 'An error occurred' });
+    }
+  }
 }
+
 export { EventsGateway };
