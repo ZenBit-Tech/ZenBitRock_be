@@ -53,6 +53,7 @@ export class AuthService {
           email: user.email,
           id: user.id,
           isVerified: user.isVerified,
+          isNewbie: user.isNewbie,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
