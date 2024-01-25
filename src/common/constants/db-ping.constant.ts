@@ -1,4 +1,4 @@
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 25;
 const RETRY_DELAY = 400;
 
 export { MAX_RETRIES, RETRY_DELAY };
