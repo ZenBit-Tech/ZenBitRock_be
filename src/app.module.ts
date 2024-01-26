@@ -23,6 +23,12 @@ import { DatabasePingMiddleware } from './middleware/database-ping.middleware';
 import { AuthController } from './modules/auth/auth.controller';
 import { UserController } from './modules/user/user.controller';
 import { ContentModule } from './modules/content/content.module';
+import { ChatController } from './modules/chat/conrollers/chat.controller';
+import { MessageController } from './modules/chat/conrollers/message.controller';
+import { ContentController } from './modules/content/controllers/content.controller';
+import { EmailController } from './modules/email/email.controller';
+import { LeadController } from './modules/lead/lead.controller';
+import { VerificationController } from './modules/verification/verification.controller';
 
 @Module({
   imports: [
@@ -73,6 +79,15 @@ export class AppModule implements NestModule {
     consumer.apply(QobrixProxyMiddleware).forRoutes('/qobrix-proxy/*');
     consumer
       .apply(DatabasePingMiddleware)
-      .forRoutes(AuthController, UserController);
+      .forRoutes(
+        AuthController,
+        UserController,
+        ChatController,
+        MessageController,
+        ContentController,
+        EmailController,
+        LeadController,
+        VerificationController,
+      );
   }
 }
