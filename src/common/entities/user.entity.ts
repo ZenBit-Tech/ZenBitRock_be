@@ -20,7 +20,10 @@ export class User extends CoreEntity {
   @Column({ type: 'boolean', name: 'is_verified', default: false })
   isVerified: boolean;
 
-  @Column({ type: 'varchar', name: 'veritication_code', default: '' })
+  @Column({ type: 'boolean', name: 'is_newbie', default: true })
+  isNewbie: boolean;
+
+  @Column({ type: 'varchar', name: 'verification_code', default: '' })
   verificationCode: string;
 
   @Column({ type: 'varchar', name: 'firstName', default: null })

@@ -2,6 +2,7 @@ type UserInfoResponse = {
   email: string;
   id: string;
   isVerified: boolean;
+  isNewbie: boolean;
   firstName: string;
   lastName: string;
   role: string;
