@@ -67,12 +67,12 @@ export class ChatService {
         })) as User[];
       }
       await this.chatRepository.save(chat);
-      chat.members.forEach(
-        async (member) =>
-          await this.eventsGateway.addToRoom(member.id, chat.id),
-      );
 
-      this.eventsGateway.server.emit(ChatEvent.NewChat, chat.id);
+      for (const member of chat.members) {
+        await this.eventsGateway.addToRoom(member.id, chat.id);
+      }
+
+      this.eventsGateway.server.to(chat.id).emit(ChatEvent.NewChat, chat.id);
 
       return { chat };
     } catch (error) {
@@ -131,10 +131,10 @@ export class ChatService {
         chat.members = chatData.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
-        chat.members.forEach(
-          async (member) =>
-            await this.eventsGateway.addToRoom(member.id, chat.id),
-        );
+
+        for (const member of chat.members) {
+          await this.eventsGateway.addToRoom(member.id, chat.id);
+        }
       } else if (chatData.memberIds && chatData.memberIds.length === 0) {
         chat.members = [];
       }
