@@ -104,20 +104,38 @@ export class MessageService {
 
   async getUnreadCount(userId: string): Promise<number> {
     try {
-      const unreadCount = await this.messageRepository
-        .createQueryBuilder('message')
-        .leftJoin('message.readers', 'reader', 'reader.user = :userId', {
+      const userChats = await this.chatRepository
+        .createQueryBuilder('chat')
+        .leftJoinAndSelect('chat.members', 'member', 'member.id = :userId', {
           userId,
         })
-        .leftJoin('message.owner', 'owner')
-        .where('(reader.id IS NULL OR reader.isRead = false)') // Count messages where the user is not a reader or the message is not read
-        .andWhere('owner.isDeleted = false') // Additional condition if needed
-        .getCount();
+        .where('member.id IS NOT NULL')
+        .getMany();
 
-      console.log('Unread Count:', unreadCount);
-      return unreadCount;
+      const unreadCountsPromises = userChats.map(async (chat) => {
+        const unreadCountInChat = await this.messageRepository
+          .createQueryBuilder('message')
+          .leftJoinAndSelect(
+            'message.readers',
+            'reader',
+            'reader.user = :userId',
+            { userId },
+          )
+          .where('reader.id IS NULL')
+          .andWhere('message.chat = :chatId', { chatId: chat.id })
+          .getCount();
+
+        return unreadCountInChat;
+      });
+
+      const unreadCounts = await Promise.all(unreadCountsPromises);
+      const totalUnreadCount = unreadCounts.reduce(
+        (sum, count) => sum + count,
+        0,
+      );
+
+      return totalUnreadCount;
     } catch (error) {
-      console.error('Error fetching unread message count:', error);
       throw new Error('Failed to fetch unread message count');
     }
   }
@@ -135,14 +153,17 @@ export class MessageService {
           'reader.user = :userId',
           { userId },
         )
-        .where('message.chat.id = :chatId', { chatId })
-        .andWhere('(reader.id IS NULL OR reader.isRead = false)') // Count messages in the chat where the user is not a reader or the message is not read
+        .leftJoin('message.chat', 'chat')
+        .leftJoin('chat.members', 'member', 'member.id = :userId', {
+          userId,
+        })
+        .andWhere('reader.id IS NULL')
+        .andWhere('chat.id = :chatId', { chatId })
+        .andWhere('member.id IS NOT NULL')
         .getCount();
 
-      console.log('Unread Count By ChatId:', unreadCount);
       return unreadCount;
     } catch (error) {
-      console.error('Error fetching unread message count by chat:', error);
       throw new Error('Failed to fetch unread message count by chat');
     }
   }
