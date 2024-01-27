@@ -1,5 +1,6 @@
 type UserInfoResponse = {
   email: string;
+  contactEmail: string;
   id: string;
   isVerified: boolean;
   isNewbie: boolean;
@@ -11,7 +12,7 @@ type UserInfoResponse = {
   phone: string;
   qobrixContactId: string;
   qobrixAgentId: string;
-  qobrixUserId:string;
+  qobrixUserId: string;
   agencyName: string;
   description: string;
   avatarUrl: string;

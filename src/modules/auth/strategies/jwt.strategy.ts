@@ -6,7 +6,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { User } from 'src/common/entities/user.entity';
 import { UserInfoResponse } from 'src/common/types';
-import { HTTPService } from 'src/modules/http/http.service';
 import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
@@ -14,7 +13,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private userService: UserService,
-    private httpService: HTTPService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -31,6 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       return {
         email: userDetails.email,
+        contactEmail: userDetails.contactEmail || userDetails.email,
         id: userDetails.id,
         isVerified: userDetails.isVerified,
         isNewbie: userDetails.isNewbie,

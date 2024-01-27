@@ -14,6 +14,9 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'email', default: '' })
   email: string;
 
+  @Column({ type: 'varchar', name: 'contactEmail', default: '' })
+  contactEmail: string;
+
   @Column({ type: 'varchar', name: 'password', default: '' })
   password: string;
 
