@@ -52,6 +52,7 @@ export class AuthService {
         user: {
           email: user.email,
           id: user.id,
+          isAdmin: user.isAdmin,
           isVerified: user.isVerified,
           isNewbie: user.isNewbie,
           firstName: user.firstName,

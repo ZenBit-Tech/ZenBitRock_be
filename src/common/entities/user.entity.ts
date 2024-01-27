@@ -17,6 +17,9 @@ export class User extends CoreEntity {
   @Column({ type: 'varchar', name: 'password', default: '' })
   password: string;
 
+  @Column({ type: 'boolean', name: 'is_admin', default: false })
+  isAdmin: boolean;
+
   @Column({ type: 'boolean', name: 'is_verified', default: false })
   isVerified: boolean;
 

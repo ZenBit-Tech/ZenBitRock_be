@@ -1,7 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { IsNotEmpty, IsOptional, MaxLength, MinLength } from 'class-validator';
-export class UpdateContentDto {
+
+import { ContentType } from 'src/common/types/content/content.type.enum';
+
+export class ContentDto {
   @ApiProperty({
     example: 'Hello World!',
     description: 'Content title field',
@@ -36,5 +39,5 @@ export class UpdateContentDto {
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(255)
-  type: string;
+  type: ContentType;
 }

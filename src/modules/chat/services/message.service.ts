@@ -110,7 +110,7 @@ export class MessageService {
           userId,
         })
         .where('reader.id IS NULL')
-        .andWhere('owner.isDeleted = false')
+        // .andWhere('owner.isDeleted = false')
         .getCount();
 
       return unreadCount;
@@ -135,7 +135,7 @@ export class MessageService {
         .where('message.isRead = false')
         .andWhere('message.chat = :chatId', { chatId })
         .andWhere('reader.id IS NULL')
-        .andWhere('owner.isDeleted = false')
+        // .andWhere('owner.isDeleted = false')
         .getCount();
 
       return unreadCount;
