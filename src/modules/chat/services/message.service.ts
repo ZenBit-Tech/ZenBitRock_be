@@ -109,12 +109,15 @@ export class MessageService {
         .leftJoin('message.readers', 'reader', 'reader.user = :userId', {
           userId,
         })
-        .where('reader.id IS NULL')
-        .andWhere('owner.isDeleted = false')
+        .leftJoin('message.owner', 'owner')
+        .where('(reader.id IS NULL OR reader.isRead = false)') // Count messages where the user is not a reader or the message is not read
+        .andWhere('owner.isDeleted = false') // Additional condition if needed
         .getCount();
 
+      console.log('Unread Count:', unreadCount);
       return unreadCount;
     } catch (error) {
+      console.error('Error fetching unread message count:', error);
       throw new Error('Failed to fetch unread message count');
     }
   }
@@ -132,14 +135,14 @@ export class MessageService {
           'reader.user = :userId',
           { userId },
         )
-        .where('message.isRead = false')
-        .andWhere('message.chat = :chatId', { chatId })
-        .andWhere('reader.id IS NULL')
-        .andWhere('owner.isDeleted = false')
+        .where('message.chat.id = :chatId', { chatId })
+        .andWhere('(reader.id IS NULL OR reader.isRead = false)') // Count messages in the chat where the user is not a reader or the message is not read
         .getCount();
 
+      console.log('Unread Count By ChatId:', unreadCount);
       return unreadCount;
     } catch (error) {
+      console.error('Error fetching unread message count by chat:', error);
       throw new Error('Failed to fetch unread message count by chat');
     }
   }

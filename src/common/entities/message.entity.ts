@@ -11,9 +11,6 @@ export class Message extends CoreEntity {
   @Column()
   content: string;
 
-  @Column({ type: 'boolean', name: 'is_read', default: false })
-  isRead: boolean;
-
   @OneToMany(() => ChatMessageReader, (reader) => reader.message, {
     cascade: ['insert', 'update', 'recover', 'remove'],
     eager: true,
