@@ -29,6 +29,7 @@ import { ContentController } from './modules/content/controllers/content.control
 import { EmailController } from './modules/email/email.controller';
 import { LeadController } from './modules/lead/lead.controller';
 import { VerificationController } from './modules/verification/verification.controller';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { VerificationController } from './modules/verification/verification.cont
     LeadModule,
     EventsModule,
     ChatModule,
+    NotificationModule,
     ContentModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],

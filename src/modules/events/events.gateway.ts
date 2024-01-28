@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
-  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
   OnGatewayInit,
@@ -25,9 +24,14 @@ import { CreateMessageDto } from 'modules/chat/dto/create-message.dto';
 import { ChatService } from 'modules/chat/services/chat.service';
 import { MessageService } from 'modules/chat/services/message.service';
 import { UserService } from 'modules/user/user.service';
-import { Chat } from 'src/common/entities/chat.entity';
-import { ChatEvent } from 'src/common/enums';
-import { SocketWithAuth, TokenPayload } from 'src/common/types';
+import { NotificationService } from 'modules/notification';
+import { Chat, User } from 'src/common/entities';
+import { ChatEvent, NotificationType } from 'src/common/enums';
+import {
+  NotificationPayload,
+  SocketWithAuth,
+  TokenPayload,
+} from 'src/common/types';
 import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
 import { MessageResponse } from 'src/common/types/message/message.type';
 
@@ -48,6 +52,9 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   @Inject()
   private chatService: ChatService;
+
+  @Inject()
+  private notificationService: NotificationService;
 
   @WebSocketServer()
   server: Server;
@@ -127,6 +134,71 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   async addToRoom(userId: string, chatId: string): Promise<void> {
     const sockets = await this.server.in(userId).fetchSockets();
     sockets.forEach((socket) => socket.join(chatId));
+  }
+
+  async sendNotification(payload: NotificationPayload) {
+    try {
+      const notification = await this.notificationService.create(payload);
+
+      payload.recipients.forEach((recipient) => {
+        this.server.to(recipient).emit(ChatEvent.NewNotification, notification);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async handleChatUpdate(
+    newMemberIds: string[],
+    oldMembers: User[],
+    chat: Chat,
+  ): Promise<void> {
+    const { id: chatId, members } = chat;
+
+    const newMembers = newMemberIds.filter(
+      (memberId) => !oldMembers.find((member) => member.id === memberId),
+    );
+
+    const deletedMembers = oldMembers.filter(
+      (member) => !newMemberIds.find((memberId) => memberId === member.id),
+    );
+
+    if (deletedMembers.length) {
+      deletedMembers.forEach(async (member) => {
+        const sockets = await this.server.in(member.id).fetchSockets();
+        sockets.forEach((socket) => socket.leave(chatId));
+      });
+    }
+
+    if (newMembers.length) {
+      for (const member of newMembers) {
+        await this.addToRoom(member, chatId);
+      }
+
+      const users = await this.userService.findAllByIds(newMembers);
+
+      let notificationMessage = '';
+      users.forEach((user) => {
+        notificationMessage = notificationMessage.concat(
+          `${user.firstName} ${user.lastName},`,
+        );
+      });
+
+      notificationMessage = notificationMessage.substring(
+        0,
+        notificationMessage.lastIndexOf(','),
+      );
+
+      notificationMessage = notificationMessage.concat(
+        `${newMembers.length === 1 ? ' was' : ' were'} added to ${chat.title}`,
+      );
+
+      await this.sendNotification({
+        text: notificationMessage,
+        type: NotificationType.UserAddedToChat,
+        recipients: members.map((member) => member.id),
+      });
+    }
   }
 
   async pingDb(): Promise<void> {

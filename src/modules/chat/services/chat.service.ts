@@ -9,14 +9,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-
-import { Chat } from 'src/common/entities/chat.entity';
-import { User } from 'src/common/entities/user.entity';
+import { Chat, User } from 'src/common/entities';
+import { ChatEvent } from 'src/common/enums';
 import { EventsGateway } from 'src/modules/events/events.gateway';
-
 import { CreateChatDto } from '../dto/create-chat.dto';
 import { UpdateChatDto } from '../dto/update-chat.dto';
-import { ChatEvent } from 'src/common/enums';
 
 @Injectable()
 export class ChatService {
@@ -127,14 +124,12 @@ export class ChatService {
         throw new NotFoundException('Chat not found');
       }
 
+      const currentMembers = chat.members;
+
       if (chatData.memberIds && chatData.memberIds.length > 0) {
         chat.members = chatData.memberIds.map((memberId) => ({
           id: memberId,
         })) as User[];
-
-        for (const member of chat.members) {
-          await this.eventsGateway.addToRoom(member.id, chat.id);
-        }
       } else if (chatData.memberIds && chatData.memberIds.length === 0) {
         chat.members = [];
       }
@@ -143,7 +138,16 @@ export class ChatService {
         chat.title = chatData.title;
       }
 
-      const { id: chatId } = await this.chatRepository.save(chat);
+      const updatedChat = await this.chatRepository.save(chat);
+      const { id: chatId } = updatedChat;
+
+      if (chatData.memberIds) {
+        await this.eventsGateway.handleChatUpdate(
+          chatData.memberIds,
+          currentMembers,
+          updatedChat,
+        );
+      }
 
       this.eventsGateway.server.to(chatId).emit(ChatEvent.ChatUpdated, chatId);
 

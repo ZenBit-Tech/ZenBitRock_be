@@ -143,6 +143,18 @@ export class UserService {
     }
   }
 
+  async findAllByIds(ids: string[]): Promise<User[]> {
+    try {
+      return await this.userRepository.find({
+        where: {
+          id: In(ids),
+        },
+      });
+    } catch (error) {
+      throw new Error(`Error finding users: ${error.message}`);
+    }
+  }
+
   async findLatestActiveUserByEmail(email: string): Promise<User> {
     try {
       const users = await this.userRepository.find({
@@ -363,7 +375,10 @@ export class UserService {
     }
   }
 
-  async getChatsByUserWithMessages(data: ChatsByUserDto, userId: string): Promise<Chat[]> {
+  async getChatsByUserWithMessages(
+    data: ChatsByUserDto,
+    userId: string,
+  ): Promise<Chat[]> {
     try {
       const chats = await this.chatRepository
         .createQueryBuilder('chat')
