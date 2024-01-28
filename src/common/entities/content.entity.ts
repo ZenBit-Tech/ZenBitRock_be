@@ -1,8 +1,9 @@
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
-import { ContentStatus } from './contentStatus.entity';
-import { CoreEntity } from './core.entity';
-import { User } from './user.entity';
+import { ContentStatus } from 'common/entities/contentStatus.entity';
+import { CoreEntity } from 'common/entities/core.entity';
+import { User } from 'common/entities/user.entity';
+import { ContentType } from 'common/types/content/content.type.enum';
 
 @Entity()
 export class Content extends CoreEntity {
@@ -10,7 +11,8 @@ export class Content extends CoreEntity {
 
   @Column({ type: 'varchar', name: 'link' }) link: string;
 
-  @Column({ type: 'varchar', name: 'type' }) type: string;
+  @Column({ type: 'enum', enum: ['video', 'article'], name: 'type' })
+  type: ContentType;
 
   @Column({ type: 'varchar', name: 'screenshot', nullable: true })
   screenshot?: string;
@@ -19,6 +21,7 @@ export class Content extends CoreEntity {
   users: User[];
 
   @OneToMany(() => ContentStatus, (contentStatus) => contentStatus.content, {
+    onDelete: 'CASCADE',
     cascade: true,
     eager: true,
   })

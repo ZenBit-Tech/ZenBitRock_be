@@ -1,27 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, MaxLength, MinLength } from 'class-validator';
 
 import { ContentType } from 'src/common/types/content/content.type.enum';
 
-export class ContentDto {
+export class UpdateContentDto {
   @ApiProperty({
     example: 'Hello World!',
     description: 'Content title field',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @MinLength(1)
   @MaxLength(255)
-  title: string;
+  title?: string;
 
   @ApiProperty({
     example: 'https://helloworld.com',
     description: 'Content link field',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @MinLength(1)
   @MaxLength(255)
-  link: string;
+  link?: string;
 
   @ApiProperty({
     example: 'https://helloworld.com',
@@ -36,7 +36,7 @@ export class ContentDto {
     example: 'video',
     description: 'Content type field',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @MinLength(1)
   @MaxLength(255)
   type: ContentType;
