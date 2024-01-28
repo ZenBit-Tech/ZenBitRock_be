@@ -79,17 +79,5 @@ export class AppModule implements NestModule {
   // eslint-disable-next-line class-methods-use-this
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(QobrixProxyMiddleware).forRoutes('/qobrix-proxy/*');
-    consumer
-      .apply(DatabasePingMiddleware)
-      .forRoutes(
-        AuthController,
-        UserController,
-        ChatController,
-        MessageController,
-        ContentController,
-        EmailController,
-        LeadController,
-        VerificationController,
-      );
   }
 }

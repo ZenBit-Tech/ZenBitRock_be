@@ -6,6 +6,7 @@ import {
   Inject,
   Logger,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -25,7 +26,7 @@ import { ChatService } from 'modules/chat/services/chat.service';
 import { MessageService } from 'modules/chat/services/message.service';
 import { UserService } from 'modules/user/user.service';
 import { NotificationService } from 'modules/notification';
-import { Chat, User } from 'src/common/entities';
+import { Chat, User, Notification } from 'src/common/entities';
 import { ChatEvent, NotificationType } from 'src/common/enums';
 import {
   NotificationPayload,
@@ -53,7 +54,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   @Inject()
   private chatService: ChatService;
 
-  @Inject()
+  @Inject(forwardRef(() => NotificationService))
   private notificationService: NotificationService;
 
   @WebSocketServer()
@@ -223,6 +224,13 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   ): Promise<MessageResponse[]> {
     await this.pingDb();
     return await this.messageService.getMessages(chatId);
+  }
+
+  @SubscribeMessage(ChatEvent.RequestAllNotifications)
+  async getAllNotifications(
+    @MessageBody() { userId }: { userId: string },
+  ): Promise<Notification[]> {
+    return await this.notificationService.findNotificationsByUserId(userId);
   }
 
   @SubscribeMessage('join')
