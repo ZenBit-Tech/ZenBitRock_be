@@ -104,16 +104,37 @@ export class MessageService {
 
   async getUnreadCount(userId: string): Promise<number> {
     try {
-      const unreadCount = await this.messageRepository
-        .createQueryBuilder('message')
-        .leftJoin('message.readers', 'reader', 'reader.user = :userId', {
+      const userChats = await this.chatRepository
+        .createQueryBuilder('chat')
+        .leftJoinAndSelect('chat.members', 'member', 'member.id = :userId', {
           userId,
         })
-        .where('reader.id IS NULL')
-        // .andWhere('owner.isDeleted = false')
-        .getCount();
+        .where('member.id IS NOT NULL')
+        .getMany();
 
-      return unreadCount;
+      const unreadCountsPromises = userChats.map(async (chat) => {
+        const unreadCountInChat = await this.messageRepository
+          .createQueryBuilder('message')
+          .leftJoinAndSelect(
+            'message.readers',
+            'reader',
+            'reader.user = :userId',
+            { userId },
+          )
+          .where('reader.id IS NULL')
+          .andWhere('message.chat = :chatId', { chatId: chat.id })
+          .getCount();
+
+        return unreadCountInChat;
+      });
+
+      const unreadCounts = await Promise.all(unreadCountsPromises);
+      const totalUnreadCount = unreadCounts.reduce(
+        (sum, count) => sum + count,
+        0,
+      );
+
+      return totalUnreadCount;
     } catch (error) {
       throw new Error('Failed to fetch unread message count');
     }
@@ -132,10 +153,13 @@ export class MessageService {
           'reader.user = :userId',
           { userId },
         )
-        .where('message.isRead = false')
-        .andWhere('message.chat = :chatId', { chatId })
+        .leftJoin('message.chat', 'chat')
+        .leftJoin('chat.members', 'member', 'member.id = :userId', {
+          userId,
+        })
         .andWhere('reader.id IS NULL')
-        // .andWhere('owner.isDeleted = false')
+        .andWhere('chat.id = :chatId', { chatId })
+        .andWhere('member.id IS NOT NULL')
         .getCount();
 
       return unreadCount;
