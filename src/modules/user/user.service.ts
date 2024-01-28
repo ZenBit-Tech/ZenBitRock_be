@@ -444,7 +444,7 @@ export class UserService {
         }
       });
 
-      await Promise.all(promises);
+      await Promise.allSettled(promises);
 
       const res = await this.userRepository.find({
         where: { id: In(processedUserIds) },
