@@ -8,6 +8,7 @@ import { Content } from './content.entity';
 import { ContentStatus } from './contentStatus.entity';
 import { CoreEntity } from './core.entity';
 import { Message } from './message.entity';
+import { NotificationToUser } from './notificationToUser';
 
 @Entity()
 export class User extends CoreEntity {
@@ -106,6 +107,16 @@ export class User extends CoreEntity {
 
   @OneToMany(() => Chat, (chat) => chat.owner)
   chats: Chat[];
+
+  @OneToMany(
+    () => NotificationToUser,
+    (notificationToUser) => notificationToUser.user,
+    {
+      cascade: ['insert', 'update', 'recover', 'remove'],
+      eager: true,
+    },
+  )
+  notifications: NotificationToUser[];
 
   @ManyToMany(() => Chat, (chat) => chat.members)
   joinedChats: Chat[];
