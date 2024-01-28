@@ -1,5 +1,6 @@
 type UserInfoResponse = {
   email: string;
+  contactEmail: string;
   id: string;
   isAdmin: boolean;
   isVerified: boolean;

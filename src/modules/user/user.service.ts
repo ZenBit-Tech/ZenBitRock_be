@@ -18,8 +18,6 @@ import { Chat } from 'src/common/entities/chat.entity';
 import { User } from 'src/common/entities/user.entity';
 import { Message } from 'src/common/entities/message.entity';
 import {
-  GetChatsByUserWithMessages,
-  Pagination,
   UserAuthResponse,
   UserInfoResponse,
   UserSetAvatarResponse,
@@ -65,6 +63,7 @@ export class UserService {
       return {
         user: {
           email: user.email,
+          contactEmail: user.contactEmail || user.email,
           id: user.id,
           isVerified: user.isVerified,
           isDeleted: user.isDeleted,
@@ -457,7 +456,7 @@ export class UserService {
         }
       });
 
-      await Promise.all(promises);
+      await Promise.allSettled(promises);
 
       const res = await this.userRepository.find({
         where: { id: In(processedUserIds) },

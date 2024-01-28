@@ -1,13 +1,24 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ConfigService } from 'common/configs/config.service';
+import { AgentResponse } from 'src/common/types/user/agent-response.type';
+import { UserProfileResponse } from 'src/common/types';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class HTTPService {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
+    @Inject(forwardRef(() => UserService))
+    private userService: UserService,
   ) {}
 
   async checkAgentExistsInCRM(agentId: string): Promise<boolean> {
@@ -186,5 +197,54 @@ export class HTTPService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async getAgentById(id: string): Promise<AgentResponse> {
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    if (!id) {
+      return;
+    }
+    const url = `${baseUrl}/agents/${id}`;
+    try {
+      const response = await lastValueFrom(this.httpService.get(url));
+      return response.data.data;
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Failed to retrieve agent',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateUserDataFromCrm(
+    userId: string,
+    qobrixAgentId: string,
+  ): Promise<UserProfileResponse> {
+    const crmResponse = await this.getAgentById(qobrixAgentId);
+    if (!crmResponse) {
+      return null;
+    }
+
+    const updateData = {
+      firstName: crmResponse.primary_contact_contact.first_name,
+      lastName: crmResponse.primary_contact_contact.last_name,
+      nationality: crmResponse.primary_contact_contact.nationality,
+      contactEmail: crmResponse.primary_contact_contact.email,
+      phone: crmResponse.primary_contact_contact.phone,
+      street: crmResponse.primary_contact_contact.street,
+      city: crmResponse.primary_contact_contact.city,
+      state: crmResponse.primary_contact_contact.state,
+      zip: crmResponse.primary_contact_contact.post_code,
+      country: crmResponse.primary_contact_contact.country,
+      dateOfBirth: crmResponse.primary_contact_contact.birthdate,
+      role: crmResponse.agent_type,
+      description: crmResponse.description,
+    };
+
+    await this.userService.updateById(userId, updateData);
+    return this.userService.findOneById(userId);
   }
 }

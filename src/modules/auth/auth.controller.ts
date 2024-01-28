@@ -28,11 +28,17 @@ import { RestorePasswordDto } from './dto/restore-password.dto';
 import { VerifyPasswordDto } from './dto/verify-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { HTTPService } from '../http/http.service';
+import { UserService } from '../user/user.service';
 
 @Controller('auth')
 @ApiBearerAuth()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    readonly httpService: HTTPService,
+    readonly userService: UserService,
+  ) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Endpoint to sign in user with email and password' })
@@ -53,7 +59,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<UserProfileResponse> {
     try {
-      return req.user;
+      const userId = req.user?.id;
+      const qobrixAgentId = req.user?.qobrixAgentId;
+
+      if (qobrixAgentId) {
+        return await this.httpService.updateUserDataFromCrm(
+          userId,
+          qobrixAgentId,
+        );
+      } else {
+        return req.user;
+      }
     } catch (error) {
       throw error;
     }
