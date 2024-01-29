@@ -11,6 +11,7 @@ const ChatEvent = {
   RequestUnreadMessagesCountUpdated: 'unread_messages_count_updated',
   NewNotification: 'new_nofification',
   RequestAllNotifications: 'request_all_notifications',
+  DeleteNotificationToUser: 'delete_notification_to_user',
 } as const;
 
 export { ChatEvent };

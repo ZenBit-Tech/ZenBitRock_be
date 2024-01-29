@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 
 import { Notification } from 'src/common/entities/notification.entity';
 import { NotificationPayload } from 'src/common/types';
@@ -13,7 +13,7 @@ export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
-    @InjectRepository(Notification)
+    @InjectRepository(NotificationToUser)
     private notificationToUserRepository: Repository<NotificationToUser>,
   ) {}
 
@@ -41,6 +41,22 @@ export class NotificationService {
       throw new NotFoundException('Notification not found');
     }
     await this.notificationRepository.delete({ id });
+  }
+
+  async deleteToUser(
+    notificationId: string,
+    userId: string,
+  ): Promise<DeleteResult> {
+    const notificationToUser = await this.notificationToUserRepository.findOne({
+      where: { notification: { id: notificationId }, user: { id: userId } },
+    });
+
+    if (!notificationToUser) {
+      throw new NotFoundException('Notification not found');
+    }
+    return this.notificationToUserRepository.delete({
+      id: notificationToUser.id,
+    });
   }
 
   async findNotificationsByUserId(id: string): Promise<Notification[]> {
