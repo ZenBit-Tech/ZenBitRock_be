@@ -33,14 +33,12 @@ import {
   SocketWithAuth,
   TokenPayload,
 } from 'src/common/types';
-import { MAX_RETRIES, RETRY_DELAY } from 'src/common/constants';
+
 import { MessageResponse } from 'src/common/types/message/message.type';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(EventsGateway.name);
-  private queue: (() => void)[] = [];
-  private isQueueRunning: boolean = false;
 
   @Inject()
   private jwtService: JwtService;
@@ -68,8 +66,6 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         const token =
           socket.handshake.auth.token || socket.handshake.headers.token;
 
-        await this.pingDb();
-
         const { id, email } = this.jwtService.verify<TokenPayload>(token);
 
         const crendetialsInvalid = !id || !email;
@@ -87,34 +83,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         socket.userId = id;
         socket.userEmail = email;
 
-        socket.prependAny(async () => {
-          await this.handleSocketEvent(this.pingDb.bind(this));
-          socket.emit('db_pinged');
-        });
-
         next();
       } catch (error) {
         next(error);
       }
     });
-  }
-
-  async handleQueue(handler: () => Promise<void>) {
-    this.isQueueRunning = true;
-    await handler();
-
-    while (this.queue.length > 0) {
-      this.queue.shift()();
-    }
-    this.isQueueRunning = false;
-  }
-
-  async handleSocketEvent(handler: () => Promise<void>) {
-    if (!this.isQueueRunning) {
-      this.handleQueue(handler);
-    } else {
-      this.queue.push(handler);
-    }
   }
 
   async handleConnection(client: SocketWithAuth): Promise<void> {
@@ -202,27 +175,10 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     }
   }
 
-  async pingDb(): Promise<void> {
-    let attemptCount = 0;
-    let isRetrySuccessful = false;
-
-    while (attemptCount < MAX_RETRIES && !isRetrySuccessful) {
-      try {
-        await this.userService.findOne('ping');
-        isRetrySuccessful = true;
-      } catch (error) {
-        console.error(error);
-        attemptCount++;
-        await new Promise((res) => setTimeout(res, RETRY_DELAY));
-      }
-    }
-  }
-
   @SubscribeMessage(ChatEvent.RequestAllMessages)
   async getAllMessages(
     @MessageBody() { chatId }: { chatId: string },
   ): Promise<MessageResponse[]> {
-    await this.pingDb();
     return await this.messageService.getMessages(chatId);
   }
 
@@ -231,6 +187,16 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     @MessageBody() { userId }: { userId: string },
   ): Promise<Notification[]> {
     return await this.notificationService.findNotificationsByUserId(userId);
+  }
+
+  @SubscribeMessage(ChatEvent.DeleteNotificationToUser)
+  async deleteNotificationToUser(
+    @MessageBody()
+    { notificationId, userId }: { notificationId: string; userId: string },
+  ): Promise<boolean> {
+    return Boolean(
+      await this.notificationService.deleteToUser(notificationId, userId),
+    );
   }
 
   @SubscribeMessage('join')
@@ -254,41 +220,37 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     client: SocketWithAuth,
     createMessageDto: CreateMessageDto,
   ): Promise<void> {
-    await this.handleSocketEvent(async () => {
-      try {
-        const { userId } = client;
+    try {
+      const { userId } = client;
 
-        const isMember = await this.chatService.checkUserisChatMember(
-          createMessageDto.chatId,
+      const isMember = await this.chatService.checkUserisChatMember(
+        createMessageDto.chatId,
+        userId,
+      );
+
+      if (isMember) {
+        const message = await this.messageService.createMessage(
+          createMessageDto,
           userId,
         );
 
-        if (isMember) {
-          const message = await this.messageService.createMessage(
-            createMessageDto,
-            userId,
-          );
+        this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
 
-          this.server.to(message.chat.id).emit(ChatEvent.NewMessage, message);
+        const userIds = Array.from(
+          new Set(message.chat.members.map((user) => user.id)),
+        );
 
-          const userIds = Array.from(
-            new Set(message.chat.members.map((user) => user.id)),
-          );
-
-          userIds.forEach((id) =>
-            this.server
-              .to(id)
-              .emit(ChatEvent.RequestUnreadMessagesCountUpdated),
-          );
-        } else {
-          client.emit('errorMessage', { message: 'Not a chat  member' });
-        }
-      } catch (error) {
-        client.emit('errorMessage', {
-          message: `An error occurred ${error ? error : ''}`,
-        });
+        userIds.forEach((id) =>
+          this.server.to(id).emit(ChatEvent.RequestUnreadMessagesCountUpdated),
+        );
+      } else {
+        client.emit('errorMessage', { message: 'Not a chat  member' });
       }
-    });
+    } catch (error) {
+      client.emit('errorMessage', {
+        message: `An error occurred ${error ? error : ''}`,
+      });
+    }
   }
 
   @SubscribeMessage(ChatEvent.RequestAllChats)
