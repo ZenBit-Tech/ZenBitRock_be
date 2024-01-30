@@ -62,6 +62,7 @@ export class NotificationService {
   async findNotificationsByUserId(id: string): Promise<Notification[]> {
     return await this.notificationRepository.find({
       where: { recipients: { user: { id } } },
+      order: { createdAt: 'DESC' },
     });
   }
 
