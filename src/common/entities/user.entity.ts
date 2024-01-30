@@ -119,7 +119,6 @@ export class User extends CoreEntity {
     (notificationToUser) => notificationToUser.user,
     {
       cascade: ['insert', 'update', 'recover', 'remove'],
-      eager: true,
     },
   )
   notifications: NotificationToUser[];
