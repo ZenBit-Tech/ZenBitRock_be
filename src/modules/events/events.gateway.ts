@@ -154,7 +154,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       let notificationMessage = '';
       users.forEach((user) => {
         notificationMessage = notificationMessage.concat(
-          `${user.firstName} ${user.lastName},`,
+          `${user.firstName} ${user.lastName} , `,
         );
       });
 
@@ -164,7 +164,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
       );
 
       notificationMessage = notificationMessage.concat(
-        `${newMembers.length === 1 ? ' was' : ' were'} added to ${chat.title}`,
+        `${newMembers.length === 1 ? 'was' : 'were'} added to ${chat.title}`,
       );
 
       await this.sendNotification({
