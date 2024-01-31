@@ -171,7 +171,7 @@ export class MessageService {
   async markMessageAsRead(
     messageId: string,
     userId: string,
-  ): Promise<string[]> {
+  ): Promise<{ members: string[]; chatId: string }> {
     try {
       const message = await this.messageRepository.findOne({
         where: { id: messageId },
@@ -189,7 +189,6 @@ export class MessageService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-
       const isAlreadyRead = message.readers.some(
         (reader) => reader.user.id === userId && reader.isRead,
       );
@@ -214,7 +213,10 @@ export class MessageService {
           return allUserIds;
         }, []);
 
-        return Array.from(new Set(userIds));
+        return {
+          members: userIds,
+          chatId: chats[0].id,
+        };
       }
     } catch (error) {
       throw new Error(`Failed to mark message as read: ${error.message}`);
