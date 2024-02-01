@@ -1,9 +1,10 @@
 /* eslint-disable import/no-cycle */
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
-import { ChatMessageReader } from 'common/entities/chatMessageReader.entity';
+import { ChatMessageReader } from 'src/common/entities/chatMessageReader.entity';
 
 import { Chat } from './chat.entity';
+import { ChatMessageLike } from './chatMessageLike.entity';
 import { Content } from './content.entity';
 import { ContentStatus } from './contentStatus.entity';
 import { CoreEntity } from './core.entity';
@@ -134,4 +135,7 @@ export class User extends CoreEntity {
 
   @OneToMany(() => ChatMessageReader, (reader) => reader.user)
   readMessages: ChatMessageReader[];
+
+  @OneToMany(() => ChatMessageLike, (like) => like.user)
+  likeMessages: ChatMessageLike[];
 }

@@ -10,6 +10,7 @@ import { User } from 'src/common/entities/user.entity';
 import { MessageResponse } from 'src/common/types/message/message.type';
 
 import { CreateMessageDto } from '../dto/create-message.dto';
+import { ChatMessageLike } from 'src/common/entities/chatMessageLike.entity';
 
 @Injectable()
 export class MessageService {
@@ -44,6 +45,16 @@ export class MessageService {
             isRead: isRead || false,
           };
         });
+        const likes = chatMembers.map((member) => {
+          const { like } = message.likes.find(
+            (item) => item.user.id === member.id,
+          );
+          return {
+            messageId: message.id,
+            userId: member.id,
+            like: like || 0,
+          };
+        });
 
         return {
           id: message.id,
@@ -56,6 +67,7 @@ export class MessageService {
             lastName: message.owner.lastName,
           },
           isReadBy,
+          likes,
         };
       });
       return response;
@@ -220,6 +232,56 @@ export class MessageService {
       }
     } catch (error) {
       throw new Error(`Failed to mark message as read: ${error.message}`);
+    }
+  }
+
+  async setLike(
+    messageId: string,
+    like: number,
+    userId: string,
+  ): Promise<{ members: string[]; chatId: string }> {
+    try {
+      const message = await this.messageRepository.findOne({
+        where: { id: messageId },
+        relations: ['likes', 'chat', 'chat.members', 'likes.user'],
+      });
+
+      if (!message) {
+        throw new NotFoundException('Message not found');
+      }
+
+      const user = await User.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const messageLike = new ChatMessageLike();
+      messageLike.like = like;
+      messageLike.user = user;
+      messageLike.message = message;
+
+      message.likes.push(messageLike);
+
+      await this.messageRepository.save(message);
+
+      const chats = await this.chatRepository.find({
+        where: { id: message.chat.id },
+        relations: ['members'],
+      });
+
+      const userIds = chats.reduce((allUserIds, chat) => {
+        allUserIds.push(...chat.members.map((member) => member.id));
+        return allUserIds;
+      }, []);
+
+      return {
+        members: userIds,
+        chatId: chats[0].id,
+      };
+    } catch (error) {
+      throw new Error(`Failed to set like for the message: ${error.message}`);
     }
   }
 }

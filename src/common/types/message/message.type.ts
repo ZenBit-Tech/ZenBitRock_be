@@ -8,6 +8,7 @@ type MessageResponse = {
   content: string;
   owner: { id: string; firstName: string; lastName: string };
   isReadBy: { messageId: string; userId: string; isRead: boolean }[];
+  likes: { messageId: string; userId: string; like: number }[];
 };
 
 export { type MessageResponse };

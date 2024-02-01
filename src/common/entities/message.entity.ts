@@ -2,6 +2,7 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { Chat } from './chat.entity';
+import { ChatMessageLike } from './chatMessageLike.entity';
 import { ChatMessageReader } from './chatMessageReader.entity';
 import { CoreEntity } from './core.entity';
 import { User } from './user.entity';
@@ -16,6 +17,12 @@ export class Message extends CoreEntity {
     eager: true,
   })
   readers: ChatMessageReader[];
+
+  @OneToMany(() => ChatMessageLike, (like) => like.message, {
+    cascade: ['insert', 'update', 'recover', 'remove'],
+    eager: true,
+  })
+  likes: ChatMessageLike[];
 
   @ManyToOne(() => Chat, (chat) => chat.messages)
   chat: Chat;
