@@ -139,7 +139,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     );
 
     if (deletedMembers.length) {
-      await this.handleChatMembersDeletion(deletedMembers, chat);
+      await this.handleChatMembersDeletion(deletedMembers, oldMembers, chat);
     }
 
     if (newMembers.length) {
@@ -173,7 +173,11 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     }
   }
 
-  async handleChatMembersDeletion(deletedMembers: User[], chat: Chat) {
+  async handleChatMembersDeletion(
+    deletedMembers: User[],
+    oldMembers: User[],
+    chat: Chat,
+  ) {
     const { id: chatId, title } = chat;
     deletedMembers.forEach(async (member) => {
       const sockets = await this.server.in(member.id).fetchSockets();
@@ -199,7 +203,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     await this.sendNotification({
       text: notificationMessage,
       type: NotificationType.UserRemovedFromChat,
-      recipients: deletedMembers.map((member) => member.id),
+      recipients: oldMembers.map((member) => member.id),
     });
   }
 
