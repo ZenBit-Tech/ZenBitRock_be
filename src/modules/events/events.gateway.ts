@@ -139,10 +139,7 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     );
 
     if (deletedMembers.length) {
-      deletedMembers.forEach(async (member) => {
-        const sockets = await this.server.in(member.id).fetchSockets();
-        sockets.forEach((socket) => socket.leave(chatId));
-      });
+      await this.handleChatMembersDeletion(deletedMembers, chat);
     }
 
     if (newMembers.length) {
@@ -174,6 +171,36 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         recipients: members.map((member) => member.id),
       });
     }
+  }
+
+  async handleChatMembersDeletion(deletedMembers: User[], chat: Chat) {
+    const { id: chatId, title } = chat;
+    deletedMembers.forEach(async (member) => {
+      const sockets = await this.server.in(member.id).fetchSockets();
+      sockets.forEach((socket) => socket.leave(chatId));
+    });
+
+    let notificationMessage = '';
+    deletedMembers.forEach((user) => {
+      notificationMessage = notificationMessage.concat(
+        `${user.firstName} ${user.lastName} , `,
+      );
+    });
+
+    notificationMessage = notificationMessage.substring(
+      0,
+      notificationMessage.lastIndexOf(','),
+    );
+
+    notificationMessage = notificationMessage.concat(
+      `${deletedMembers.length === 1 ? 'was' : 'were'} removed from ${title}`,
+    );
+
+    await this.sendNotification({
+      text: notificationMessage,
+      type: NotificationType.UserRemovedFromChat,
+      recipients: deletedMembers.map((member) => member.id),
+    });
   }
 
   @SubscribeMessage(ChatEvent.RequestAllMessages)
