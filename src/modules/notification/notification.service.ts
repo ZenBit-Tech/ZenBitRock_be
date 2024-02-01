@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 
 import { Notification } from 'src/common/entities/notification.entity';
 import { NotificationPayload } from 'src/common/types';
@@ -62,19 +62,37 @@ export class NotificationService {
   async findNotificationsByUserId(id: string): Promise<Notification[]> {
     return await this.notificationRepository.find({
       where: { recipients: { user: { id } } },
+      relations: { recipients: { user: true } },
+      select: { recipients: { user: { id: true } } },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async markAsRead(id: string): Promise<void> {
-    const notification = await this.notificationToUserRepository.findOne({
-      where: { id },
+  async findNewNotificationsCount(id: string): Promise<number> {
+    const notifications = await this.notificationRepository.find({
+      where: { recipients: { user: { id }, isRead: false } },
     });
-    if (!notification) {
-      throw new Error(`Notification with id ${id} not found`);
+
+    return notifications.length;
+  }
+
+  async markAsRead(
+    notificationId: string,
+    userId: string,
+  ): Promise<UpdateResult> {
+    const notificationToUser = await this.notificationToUserRepository.findOne({
+      where: { notification: { id: notificationId }, user: { id: userId } },
+    });
+    if (!notificationToUser) {
+      throw new Error(`Notification with id ${notificationId} not found`);
     }
 
-    await this.notificationToUserRepository.update(id, { isRead: true });
+    return await this.notificationToUserRepository.update(
+      notificationToUser.id,
+      {
+        isRead: true,
+      },
+    );
   }
 
   async findOne(id: string): Promise<Notification> {
