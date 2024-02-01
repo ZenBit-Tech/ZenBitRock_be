@@ -257,16 +257,25 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
         const userIds = Array.from(
           new Set(message.chat.members.map((user) => user.id)),
         );
-
-        userIds.forEach((id) =>
-          this.server.to(id).emit(ChatEvent.RequestUnreadMessagesCountUpdated),
-        );
+        userIds
+          .filter((user) => user !== userId)
+          .forEach((id) => {
+            this.server
+              .to(id)
+              .emit(
+                ChatEvent.RequestUnreadMessagesCountUpdated,
+                message.chat.id,
+              );
+            this.server
+              .to(id)
+              .emit(ChatEvent.RequestUnreadMessagesCountUpdated);
+          });
       } else {
         client.emit('errorMessage', { message: 'Not a chat  member' });
       }
     } catch (error) {
       client.emit('errorMessage', {
-        message: `An error occurred ${error ? error : ''}`,
+        message: `An error occurred ${error || ''}`,
       });
     }
   }
@@ -317,23 +326,27 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(ChatEvent.RequestMarkAsRead)
   async markMessagesAsRead(
     client: SocketWithAuth,
-    data: { messageId: string; chatId: string },
+    data: { messageId: string },
   ): Promise<void> {
     try {
       const { userId } = client;
       const { messageId } = data;
-
-      const forUsers = await this.messageService.markMessageAsRead(
+      const { members, chatId } = await this.messageService.markMessageAsRead(
         messageId,
         userId,
       );
-      forUsers.forEach((id) =>
-        this.server.to(id).emit(ChatEvent.RequestUnreadMessagesCountUpdated),
-      );
-
-      this.server.to(userId).emit(ChatEvent.RequestUnreadMessagesCountUpdated);
+      members.forEach((member) => {
+        this.server
+          .to(member)
+          .emit(ChatEvent.RequestUnreadMessagesCountUpdated, chatId);
+        this.server
+          .to(member)
+          .emit(ChatEvent.RequestUnreadMessagesCountUpdated);
+      });
     } catch (error) {
-      client.emit('errorMessage', { message: 'An error occurred' });
+      client.emit('errorMessage', {
+        message: 'An error occurred in controller',
+      });
     }
   }
 }
