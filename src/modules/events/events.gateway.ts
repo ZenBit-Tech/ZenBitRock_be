@@ -28,6 +28,7 @@ import { UserService } from 'modules/user/user.service';
 import { NotificationService } from 'modules/notification';
 import { Chat, User, Notification } from 'src/common/entities';
 import { ChatEvent, NotificationType } from 'src/common/enums';
+
 import {
   NotificationPayload,
   SocketWithAuth,
@@ -189,6 +190,13 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     return await this.notificationService.findNotificationsByUserId(userId);
   }
 
+  @SubscribeMessage(ChatEvent.RequestNewNotificationsCount)
+  async getNewNotificationsCount(
+    @MessageBody() { userId }: { userId: string },
+  ): Promise<number> {
+    return await this.notificationService.findNewNotificationsCount(userId);
+  }
+
   @SubscribeMessage(ChatEvent.DeleteNotificationToUser)
   async deleteNotificationToUser(
     @MessageBody()
@@ -196,6 +204,16 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   ): Promise<boolean> {
     return Boolean(
       await this.notificationService.deleteToUser(notificationId, userId),
+    );
+  }
+
+  @SubscribeMessage(ChatEvent.NotificationMarkAsRead)
+  async notificationMarkAsRead(
+    @MessageBody()
+    { notificationId, userId }: { notificationId: string; userId: string },
+  ): Promise<boolean> {
+    return Boolean(
+      await this.notificationService.markAsRead(notificationId, userId),
     );
   }
 
