@@ -20,7 +20,7 @@ export class Chat extends CoreEntity {
   @Column({ type: 'boolean', name: 'is_private', default: false })
   isPrivate: boolean;
 
-  @OneToMany(() => Message, (message) => message.chat)
+  @OneToMany(() => Message, (message) => message.chat, { onDelete: 'CASCADE' })
   messages: Message[];
 
   @ManyToOne(() => User, (user) => user.chats, {

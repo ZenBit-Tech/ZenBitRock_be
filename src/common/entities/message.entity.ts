@@ -17,7 +17,7 @@ export class Message extends CoreEntity {
   })
   readers: ChatMessageReader[];
 
-  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Chat, (chat) => chat.messages)
   chat: Chat;
 
   @ManyToOne(() => User, (user) => user.messages, {

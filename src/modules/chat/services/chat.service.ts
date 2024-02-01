@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-import { Chat, User } from 'src/common/entities';
+import { Chat, Message, User, ChatMessageReader } from 'src/common/entities';
 import { ChatEvent } from 'src/common/enums';
 import { EventsGateway } from 'src/modules/events/events.gateway';
 import { CreateChatDto } from '../dto/create-chat.dto';
@@ -20,6 +20,10 @@ export class ChatService {
   constructor(
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
+    @InjectRepository(Message)
+    private readonly messageRepository: Repository<Message>,
+    @InjectRepository(ChatMessageReader)
+    private readonly chatMessageReaderRepository: Repository<ChatMessageReader>,
     @Inject(forwardRef(() => EventsGateway))
     private eventsGateway: EventsGateway,
   ) {}
@@ -97,10 +101,31 @@ export class ChatService {
 
   async deleteChat(id: string, userId: string): Promise<void> {
     try {
+      const chat = await this.chatRepository.findOne({
+        where: { id, owner: { id: userId } },
+        relations: ['messages'],
+      });
+      if (!chat) {
+        throw new NotFoundException('Chat not found');
+      }
+      await Promise.all(
+        chat.messages.map(async (message) => {
+          await this.chatMessageReaderRepository.delete({
+            message: { id: message.id },
+          });
+          await this.messageRepository
+            .createQueryBuilder()
+            .delete()
+            .from(Message)
+            .where('id = :id', { id: message.id })
+            .execute();
+        }),
+      );
       const deleteChat = await this.chatRepository.delete({
         id,
         owner: { id: userId },
       });
+
       if (!deleteChat.affected) {
         throw new NotFoundException('Chat not found');
       }
