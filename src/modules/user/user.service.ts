@@ -42,6 +42,14 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
+      const userExistsInCRMSystem =
+        await this.httpService.checkUserExistsByUsername(createUserDto.email);
+      if (userExistsInCRMSystem) {
+        throw new BadRequestException(
+          'User with this email already exists in Qobrix CRM. Please, use another email.',
+        );
+      }
+
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
