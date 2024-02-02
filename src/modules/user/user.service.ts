@@ -46,7 +46,7 @@ export class UserService {
         await this.httpService.checkUserExistsByUsername(createUserDto.email);
       if (userExistsInCRMSystem) {
         throw new BadRequestException(
-          'User with this email already exists in Qobrix CRM. Please, use another email.',
+          'This email has already been used for registration. Please use another email.',
         );
       }
 
