@@ -63,6 +63,29 @@ export class HTTPService {
     }
   }
 
+  async checkUserExistsByUsername(username: string): Promise<boolean> {
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    const url = `${baseUrl}/users?fields%5B%5D=username&fields%5B%5D=id&limit=100`;
+
+    try {
+      const response = await lastValueFrom(this.httpService.get(url));
+      const users = response.data.data;
+      const userExists = users.some(
+        (user: { id: string; username: string }) => user.username === username,
+      );
+
+      return userExists;
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Error checking user exists by username',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async deleteAgentFromCRM(userId: string): Promise<void> {
     if (!userId) {
       return;

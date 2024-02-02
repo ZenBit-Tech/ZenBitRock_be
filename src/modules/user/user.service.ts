@@ -42,6 +42,14 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto): Promise<UserAuthResponse> {
     try {
+      const userExistsInCRMSystem =
+        await this.httpService.checkUserExistsByUsername(createUserDto.email);
+      if (userExistsInCRMSystem) {
+        throw new BadRequestException(
+          'This email has already been used for registration. Please use another email.',
+        );
+      }
+
       const existingUser = await this.userRepository.findOne({
         where: {
           email: createUserDto.email,
