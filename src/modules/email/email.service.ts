@@ -8,6 +8,7 @@ import {
 import { ConfigService } from 'src/common/configs/config.service';
 import { UserService } from '../user/user.service';
 import { CODE_LENGTH, generateCode } from './lib';
+import { getVerifyEmailTemplate } from './templates/verify-email.template';
 
 @Injectable()
 export class EmailService {
@@ -35,7 +36,7 @@ export class EmailService {
       to: user.email,
       from: this.config.get('MAIL_USER'),
       subject: 'Verify your email address',
-      html: `<p>Verification code: ${code}</p>`,
+      html: getVerifyEmailTemplate(code),
     });
   }
 
