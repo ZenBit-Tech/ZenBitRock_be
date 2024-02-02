@@ -47,7 +47,6 @@ export const getVerifyEmailTemplate = (code: string): string => (
       <img src="https://res.cloudinary.com/dwp6n7qqj/image/upload/v1706874381/ZenBitRock/icon-512x512_p2amnj.png" alt="ZenBitRock">
     </div>
     <div class="content">
-      <p>Dear user,</p>
       <p>Thank you for using our service! To complete the email verification process, please use the following verification code:</p>
       <p class="verification-code">Your Verification Code: ${code}</p>
       <p>If you did not request this code, please ignore this email.</p>
