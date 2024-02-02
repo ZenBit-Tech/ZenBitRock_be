@@ -384,14 +384,14 @@ class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(ChatEvent.RequestSetLike)
   async setLike(
     client: SocketWithAuth,
-    data: { messageId: string; like: number },
+    data: { messageId: string; like: string },
   ): Promise<void> {
     try {
       const { userId } = client;
       const { messageId, like } = data;
       const { members, chatId } = await this.messageService.setLike(
         messageId,
-        like,
+        String(like),
         userId,
       );
       members.forEach((member) =>

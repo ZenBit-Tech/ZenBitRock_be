@@ -8,13 +8,13 @@ import { User } from './user.entity';
 @Entity()
 export class ChatMessageLike extends CoreEntity {
   @Column({ type: 'varchar', name: 'like', default: 0 })
-  like: number;
+  like: string;
 
-  @ManyToOne(() => Message, (message) => message.readers)
+  @ManyToOne(() => Message, (message) => message.likes)
   @JoinColumn({ name: 'message_id' })
   message: Message;
 
-  @ManyToOne(() => User, (user) => user.readMessages)
+  @ManyToOne(() => User, (user) => user.likeMessages)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
