@@ -10,7 +10,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-import { Chat, Message, User, ChatMessageReader } from 'src/common/entities';
+import {
+  Chat,
+  Message,
+  User,
+  ChatMessageReader,
+  ChatMessageLike,
+} from 'src/common/entities';
 import { ChatEvent } from 'src/common/enums';
 import { EventsGateway } from 'src/modules/events/events.gateway';
 import { CreateChatDto } from '../dto/create-chat.dto';
@@ -25,6 +31,9 @@ export class ChatService {
     private readonly messageRepository: Repository<Message>,
     @InjectRepository(ChatMessageReader)
     private readonly chatMessageReaderRepository: Repository<ChatMessageReader>,
+    @InjectRepository(ChatMessageLike)
+    private readonly chatMessageLikeRepository: Repository<ChatMessageLike>,
+
     @Inject(forwardRef(() => EventsGateway))
     private eventsGateway: EventsGateway,
     @Inject(forwardRef(() => UserService))
@@ -129,6 +138,9 @@ export class ChatService {
       await Promise.all(
         chat.messages.map(async (message) => {
           await this.chatMessageReaderRepository.delete({
+            message: { id: message.id },
+          });
+          await this.chatMessageLikeRepository.delete({
             message: { id: message.id },
           });
           await this.messageRepository
