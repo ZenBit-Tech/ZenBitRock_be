@@ -1,3 +1,4 @@
+import { UserService } from 'src/modules/user/user.service';
 import {
   HttpException,
   HttpStatus,
@@ -26,6 +27,8 @@ export class ChatService {
     private readonly chatMessageReaderRepository: Repository<ChatMessageReader>,
     @Inject(forwardRef(() => EventsGateway))
     private eventsGateway: EventsGateway,
+    @Inject(forwardRef(() => UserService))
+    private userService: UserService,
   ) {}
 
   async getChats(): Promise<Chat[] | []> {
@@ -67,9 +70,9 @@ export class ChatService {
           id: memberId,
         })) as User[];
       }
-      await this.chatRepository.save(chat);
+      const newChat = await this.chatRepository.save(chat);
 
-      for (const member of chat.members) {
+      for (const member of newChat.members) {
         await this.eventsGateway.addToRoom(member.id, chat.id);
       }
 
@@ -84,8 +87,8 @@ export class ChatService {
   async checkForPrivateChat(
     currentUserId: string,
     targetAgentId: string,
-  ): Promise<string | null> {
-    const chat = await this.chatRepository
+  ): Promise<string> {
+    const existingChat = await this.chatRepository
       .createQueryBuilder('chat')
       .innerJoin('chat.members', 'member')
       .where('chat.isPrivate = :isPrivate', { isPrivate: true })
@@ -96,7 +99,22 @@ export class ChatService {
       .having('COUNT(chat.id) = :count', { count: 2 })
       .getOne();
 
-    return chat ? chat.id : null;
+    if (existingChat) {
+      return existingChat.id;
+    }
+
+    const targetUser = await this.userService.findOneById(targetAgentId);
+
+    const { chat: newChat } = await this.createChat(
+      {
+        title: targetUser.firstName,
+        isPrivate: true,
+        memberIds: [currentUserId, targetAgentId],
+      },
+      currentUserId,
+    );
+
+    return newChat.id;
   }
 
   async deleteChat(id: string, userId: string): Promise<void> {

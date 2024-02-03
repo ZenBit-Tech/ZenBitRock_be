@@ -9,11 +9,13 @@ import { ChatController } from './conrollers/chat.controller';
 import { MessageController } from './conrollers/message.controller';
 import { ChatService } from './services/chat.service';
 import { MessageService } from './services/message.service';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Chat, Message, ChatMessageReader]),
     forwardRef(() => EventsModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [ChatController, MessageController],
   providers: [ChatService, MessageService],
