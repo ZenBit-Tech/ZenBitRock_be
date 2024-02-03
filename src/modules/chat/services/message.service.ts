@@ -4,12 +4,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Chat } from 'src/common/entities/chat.entity';
+import { ChatMessageLike } from 'src/common/entities/chatMessageLike.entity';
 import { ChatMessageReader } from 'src/common/entities/chatMessageReader.entity';
 import { Message } from 'src/common/entities/message.entity';
 import { User } from 'src/common/entities/user.entity';
 import { MessageResponse } from 'src/common/types/message/message.type';
-
-import { CreateMessageDto } from '../dto/create-message.dto';
+import { CreateMessageDto } from 'src/modules/chat/dto/create-message.dto';
 
 @Injectable()
 export class MessageService {
@@ -27,11 +27,14 @@ export class MessageService {
         .createQueryBuilder('message')
         .leftJoinAndSelect('message.owner', 'owner')
         .leftJoinAndSelect('message.readers', 'readers')
+        .leftJoinAndSelect('message.likes', 'likes')
+        .leftJoinAndSelect('likes.user', 'likeUser')
         .leftJoinAndSelect('readers.user', 'user')
         .leftJoinAndSelect('message.chat', 'chat')
         .leftJoinAndSelect('chat.members', 'members')
         .where('message.chat.id = :chatId', { chatId })
         .getMany();
+
       const response: MessageResponse[] = messages.map((message) => {
         const chatMembers = message.chat.members;
         const isReadBy = chatMembers.map((member) => {
@@ -42,6 +45,18 @@ export class MessageService {
             messageId: message.id,
             userId: member.id,
             isRead: isRead || false,
+          };
+        });
+
+        const likes = chatMembers.map((member) => {
+          const like = message.likes
+            ? message.likes.find((likeItem) => likeItem.user.id === member.id)
+            : undefined;
+
+          return {
+            messageId: message.id,
+            userId: member.id,
+            like: like ? like.like : '0',
           };
         });
 
@@ -56,8 +71,10 @@ export class MessageService {
             lastName: message.owner.lastName,
           },
           isReadBy,
+          likes,
         };
       });
+
       return response;
     } catch (error) {
       throw new Error('Failed to fetch messages');
@@ -220,6 +237,62 @@ export class MessageService {
       }
     } catch (error) {
       throw new Error(`Failed to mark message as read: ${error.message}`);
+    }
+  }
+
+  async setLike(
+    messageId: string,
+    like: string,
+    userId: string,
+  ): Promise<{ members: string[]; chatId: string }> {
+    try {
+      const message = await this.messageRepository.findOne({
+        where: { id: messageId },
+        relations: ['likes', 'chat', 'chat.members', 'likes.user'],
+      });
+
+      if (!message) {
+        throw new NotFoundException('Message not found');
+      }
+
+      const user = await User.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const isAlreadyWithLike = message.likes.some(
+        (item) => item.user.id === userId && item.like,
+      );
+
+      if (!isAlreadyWithLike) {
+        const messageLike = new ChatMessageLike();
+        messageLike.like = like;
+        messageLike.user = user;
+        messageLike.message = message;
+        message.likes.push(messageLike);
+      } else {
+        message.likes.find((item) => item.user.id === userId).like = like;
+      }
+      await this.messageRepository.save(message);
+
+      const chats = await this.chatRepository.find({
+        where: { id: message.chat.id },
+        relations: ['members'],
+      });
+
+      const userIds = chats.reduce((allUserIds, chat) => {
+        allUserIds.push(...chat.members.map((member) => member.id));
+        return allUserIds;
+      }, []);
+
+      return {
+        members: userIds,
+        chatId: chats[0].id,
+      };
+    } catch (error) {
+      throw new Error(`Failed to set like for the message: ${error.message}`);
     }
   }
 }
