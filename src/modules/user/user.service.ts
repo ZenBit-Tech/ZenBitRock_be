@@ -220,6 +220,7 @@ export class UserService {
     return {
       ...user,
       email: '',
+      contactEmail: '',
       password: '',
       firstName: 'Deleted',
       lastName: 'User',
@@ -288,6 +289,10 @@ export class UserService {
       await this.httpService.deleteAllOpportunities(
         'ContactNameContacts',
         qobrixContactId,
+      );
+      await this.httpService.deleteAllProperties(
+        'CreatedByUsers',
+        qobrixUserId,
       );
       await this.httpService.deleteAgentFromCRM(qobrixAgentId);
       await this.httpService.deleteUserFromCRM(qobrixUserId);

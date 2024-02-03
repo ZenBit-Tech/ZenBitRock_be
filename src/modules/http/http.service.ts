@@ -66,11 +66,17 @@ export class HTTPService {
   async checkUserExistsByUsername(username: string): Promise<boolean> {
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
     const url = `${baseUrl}/users?fields%5B%5D=username&fields%5B%5D=id&limit=100`;
+    const trashedUrl = `${baseUrl}/users?trashed=true&fields%5B%5D=username&fields%5B%5D=id&limit=100`;
 
     try {
       const response = await lastValueFrom(this.httpService.get(url));
+      const trashedResponse = await lastValueFrom(
+        this.httpService.get(trashedUrl),
+      );
       const users = response.data.data;
-      const userExists = users.some(
+      const trashedUsers = trashedResponse.data.data;
+      const allUsers = [...users, ...trashedUsers];
+      const userExists = allUsers.some(
         (user: { id: string; username: string }) => user.username === username,
       );
 
@@ -143,7 +149,7 @@ export class HTTPService {
       return;
     }
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
-    const url = `${baseUrl}/users/${userId}?trashed=true`;
+    const url = `${baseUrl}/users/${userId}`;
     try {
       await lastValueFrom(this.httpService.delete(url));
     } catch (error) {
@@ -177,6 +183,26 @@ export class HTTPService {
     }
   }
 
+  async getAllProperties(association: string, id: string): Promise<any[]> {
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    if (!id) {
+      return;
+    }
+    const url = `${baseUrl}/properties/related-with/${association}/${id}`;
+    try {
+      const response = await lastValueFrom(this.httpService.get(url));
+      return response.data.data;
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Failed to retrieve properties',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async deleteOpportunity(opportunityId: string): Promise<void> {
     const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
     const url = `${baseUrl}/opportunities/${opportunityId}`;
@@ -190,6 +216,25 @@ export class HTTPService {
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: 'Deleting opportunity failed',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteProperty(propertyId: string): Promise<void> {
+    const baseUrl = this.configService.get('QOBRIX_PROXY_URL');
+    const url = `${baseUrl}/properties/${propertyId}`;
+    try {
+      if (!propertyId) {
+        return;
+      }
+      await lastValueFrom(this.httpService.delete(url));
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Deleting property failed',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -216,6 +261,32 @@ export class HTTPService {
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: `Error deleting opportunities: ${id}` + error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteAllProperties(association: string, id: string): Promise<void> {
+    try {
+      if (!id) {
+        return;
+      }
+
+      const properties = await this.getAllProperties(association, id);
+      if (properties.length === 0) {
+        return;
+      }
+      const deletePromises = properties.map((property) => {
+        this.deleteProperty(property.id);
+      });
+
+      await Promise.allSettled(deletePromises);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: `Error deleting Properties: ${id}` + error.message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
