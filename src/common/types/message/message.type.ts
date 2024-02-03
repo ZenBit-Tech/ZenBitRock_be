@@ -6,7 +6,12 @@ type MessageResponse = {
   chat?: Chat;
   createdAt: Date;
   content: string;
-  owner: { id: string; firstName: string; lastName: string };
+  owner: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    isDeleted: boolean;
+  };
   isReadBy: { messageId: string; userId: string; isRead: boolean }[];
   likes: { messageId: string; userId: string; like: string }[];
 };

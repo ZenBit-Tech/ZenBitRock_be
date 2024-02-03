@@ -69,6 +69,7 @@ export class MessageService {
             id: message.owner.id,
             firstName: message.owner.firstName,
             lastName: message.owner.lastName,
+            isDeleted: message.owner.isDeleted,
           },
           isReadBy,
           likes,
