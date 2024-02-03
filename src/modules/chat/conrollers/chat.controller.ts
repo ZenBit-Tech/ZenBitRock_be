@@ -59,7 +59,7 @@ export class ChatController {
   async checkPrivateChat(
     @Param('agentId') agentId: string,
     @Request() req,
-  ): Promise<{ chatId: string | null }> {
+  ): Promise<{ chatId: string }> {
     try {
       const chatId = await this.chatService.checkForPrivateChat(
         req.user.id,
