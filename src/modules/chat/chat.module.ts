@@ -1,7 +1,12 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ChatMessageReader, Chat, Message } from 'src/common/entities';
+import {
+  ChatMessageReader,
+  Chat,
+  Message,
+  ChatMessageLike,
+} from 'src/common/entities';
 
 import { EventsModule } from '../events/events.module';
 
@@ -13,7 +18,12 @@ import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Chat, Message, ChatMessageReader]),
+    TypeOrmModule.forFeature([
+      Chat,
+      Message,
+      ChatMessageReader,
+      ChatMessageLike,
+    ]),
     forwardRef(() => EventsModule),
     forwardRef(() => UserModule),
   ],
