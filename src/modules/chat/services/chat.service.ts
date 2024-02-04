@@ -161,7 +161,16 @@ export class ChatService {
       }
 
       this.eventsGateway.server.to(id).emit(ChatEvent.ChatDeleted, id);
-
+      this.eventsGateway.server
+        .to(id)
+        .emit(ChatEvent.RequestUnreadMessagesCountUpdated);
+      chat.members
+        .filter((member) => member.id !== userId)
+        .forEach((member) =>
+          this.eventsGateway.server
+            .to(member.id)
+            .emit(ChatEvent.RequestRedirectToChats),
+        );
       throw new HttpException('Chat deleted successfully', HttpStatus.OK);
     } catch (error) {
       throw error;
