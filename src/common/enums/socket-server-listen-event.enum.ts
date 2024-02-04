@@ -16,6 +16,7 @@ const ChatEvent = {
   RequestNewNotificationsCount: 'request_new_notifications_count',
   RequestSetLike: 'request_set_like',
   RequestSetLikeUpdated: 'request_set_like_updated',
+  RequestRedirectToChats: 'request_redirect_to_chats',
 } as const;
 
 export { ChatEvent };
